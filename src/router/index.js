@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ComboList from '@/views/ComboList.vue'
+import Test from "@/views/Test.vue";
 
 const routes = [
     {
@@ -11,6 +12,11 @@ const routes = [
         path: '/combos',
         name: 'ComboList',
         component: ComboList
+    },
+    {
+        path: '/test',
+        name: 'test',
+        component: Test
     }
 ]
 
