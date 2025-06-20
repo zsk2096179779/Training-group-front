@@ -1,11 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ProductList from '@/components/ProductList.vue'
+import ComboList from '@/components/ComboList.vue'
 
 const routes = [
     {
         path: '/',
-        name: 'ProductList',
-        component: ProductList
+        name: 'Home',
+        component: ComboList
+    },
+    {
+        path: '/combos',
+        name: 'ComboList',
+        component: ComboList
     }
 ]
 

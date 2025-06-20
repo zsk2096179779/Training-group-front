@@ -1,9 +1,10 @@
 import axios from 'axios'
 import.meta.env.VITE_API_BASE_URL // 使用 Vite 的环境变量
 
+//
 // 创建 axios 实例
 const service = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || '/api', // 修改这里
+    baseURL: 'http://localhost:8080' || '/api', // 后端地址
     timeout: 5000
 })
 

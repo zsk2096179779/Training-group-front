@@ -1,9 +1,27 @@
+// src/api/product.js
 import request from '@/utils/request'
 
-export function getProductList() {
-    return request.get('/products')
+// 获取所有产品组合
+export function getCombos() {
+    return request({
+        url: '/combos',
+        method: 'get'
+    })
 }
 
-export function createOrder(data) {
-    return request.post('/orders', data)
+// 获取组合详情
+export function getComboDetail(id) {
+    return request({
+        url: `/combos/${id}`,
+        method: 'get'
+    })
+}
+
+// 创建组合
+export function createCombo(data) {
+    return request({
+        url: '/create',
+        method: 'post',
+        data
+    })
 }
