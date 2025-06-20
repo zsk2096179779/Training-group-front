@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ComboList from '@/components/ComboList.vue'
+import ComboList from '@/views/ComboList.vue'
 
 const routes = [
     {
