@@ -9,9 +9,21 @@ export default defineConfig(async () => {
   return {
     resolve: {
       alias: {
-        '~': path.resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src'),  // 添加 '@' 别名
+      '~': path.resolve(__dirname, 'src'),  // 保留您的 '~' 别名
+      'axios': path.resolve(__dirname, 'node_modules/axios/dist/axios.min.js') // 直接解析 Axios
       },
     },
     plugins: [vue()],
+    server: {
+      port: 8080,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8081',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, '') // 移除/api前缀
+        }
+      }
+    }
   }
 })

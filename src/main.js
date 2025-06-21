@@ -9,8 +9,14 @@ import index from './router/index.js'      // 如果你装了 Vue Router
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+import axios from 'axios'
 
 const app = createApp(App)
+app.provide('$http', axios)
+const http = axios.create({
+    withCredentials: true
+  })
+app.config.globalProperties.$http = http
 app.use(ElementPlus)
 app.use(createPinia())
 app.use(index)
