@@ -1,56 +1,88 @@
 <script>
-import { getCombos } from "@/api/index.js";
+import { ref, onMounted } from 'vue'
+import { getFunds } from "@/api/index.js";
+import { ElMessage, ElTable, ElTableColumn } from "element-plus";
 
 export default {
-  data() {
-    return {
-      message: '',
-      items: [],
-      loading: false,  // 新增加载状态
-      error: null      // 新增错误处理
-    };
-  },
-  methods: {
-    async fetchData() {
-      this.loading = true;
+  components: { ElTable, ElTableColumn },
+  setup() {
+    const fundData = ref([]) // 使用ref管理响应式数据
+    const isLoading = ref(false)
+    const errorMsg = ref('')
+
+    const fetchFundData = async (ids = [1, 2, 3]) => {
+      isLoading.value = true
+      errorMsg.value = ''
       try {
-        const res = await getCombos();  // 确保调用函数
-        this.items = res.data;
-        console.log('调试信息:', this.items);  // 调试日志
-      } catch (err) {
-        this.error = err.message || '数据获取失败';
-        console.error('API错误:', err);
+        const response = await getFunds(ids)
+        fundData.value = response.data || response // 兼容不同API返回格式
+        ElMessage.success('数据加载成功')
+      } catch (error) {
+        console.error('数据加载失败:', error)
+        errorMsg.value = error.message || '请求失败'
+        ElMessage.error('基金数据加载失败: ' + error.message)
       } finally {
-        this.loading = false;
+        isLoading.value = false
       }
     }
-  },
-  mounted() {
-    this.fetchData();  // 页面加载时自动触发[1,6](@ref)
+
+    // 添加手动触发测试的函数
+    const manualTest = () => {
+      fetchFundData({
+        "code": 0,
+        "data": [14, 16],
+        "msg": "success"
+      }) // 可修改为动态输入的ID
+    }
+
+    onMounted(() => {
+      fetchFundData() // 默认加载测试数据
+    })
+
+    return {
+      fundData,
+      isLoading,
+      errorMsg,
+      manualTest
+    }
   }
-};
+}
 </script>
 
 <template>
-  <div>
-    <!-- 加载状态提示 -->
-    <p v-if="loading">数据加载中...</p>
+  fetch('http://localhost:8080/combos/funds', {
+  method: 'POST',
+  headers: {
+  'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ ids: [5,7,1] })
+  }).then(res => res.json()).then(data => console.log(data))
 
-    <!-- 错误提示 -->
-    <p v-if="error" class="error">{{ error }}</p>
-
-    <!-- 数据渲染 -->
-    <ul v-if="!loading && items.length > 0">
-      <li v-for="item in items" :key="item.id">
-        {{ item }}
-      </li>
-    </ul>
-
-    <!-- 空数据提示 -->
-    <p v-if="!loading && items.length === 0">暂无数据</p>
-  </div>
 </template>
 
 <style scoped>
-.error { color: red; }
+.test-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.error {
+  color: red;
+  margin: 10px 0;
+}
+
+.test-button {
+  margin-top: 20px;
+  padding: 10px 15px;
+  background-color: #409eff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.test-button:hover {
+  background-color: #66b1ff;
+}
 </style>
