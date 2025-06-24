@@ -3,9 +3,15 @@
     <div class="page-header">
       <h2>因子管理系统</h2>
       <div class="header-actions">
-        <el-button type="primary" @click="addFactor" icon="el-icon-plus">添加因子</el-button>
+        <el-button v-if="isAdminUser" type="primary" @click="addFactor" icon="el-icon-plus">添加因子</el-button>
       </div>
     </div>
+    <!-- Tab切换区 -->
+    <el-tabs v-model="currentTab" style="margin-bottom: 16px;">
+      <el-tab-pane label="因子列表" name="list"></el-tab-pane>
+      <el-tab-pane label="创建衍生因子" name="derivative"></el-tab-pane>
+      <el-tab-pane label="风格投资因子" name="style"></el-tab-pane>
+    </el-tabs>
     <el-card class="main-card" v-if="currentTab === 'list'">
       <el-form :inline="true" class="filter-form">
         <el-form-item>
@@ -48,8 +54,11 @@
         </el-table-column>
         <el-table-column label="操作" width="160">
           <template #default="scope">
-            <el-button size="small" @click="editFactor(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="deleteFactor(scope.row)">删除</el-button>
+            <template v-if="isAdminUser">
+              <el-button size="small" @click="editFactor(scope.row)">编辑</el-button>
+              <el-button size="small" type="danger" @click="deleteFactor(scope.row)">删除</el-button>
+            </template>
+            <span v-else>无操作权限</span>
           </template>
         </el-table-column>
       </el-table>
@@ -62,6 +71,18 @@
         <el-form-item label="因子名称" prop="name">
           <el-input v-model="derivativeForm.name" placeholder="请输入因子名称" />
         </el-form-item>
+        <el-form-item label="因子代码" prop="code" required>
+          <el-input v-model="derivativeForm.code" placeholder="请输入因子代码" />
+        </el-form-item>
+        <el-form-item label="种类" prop="category" required>
+          <el-select v-model="derivativeForm.category" placeholder="请选择因子种类">
+            <el-option label="估值" value="估值"/>
+            <el-option label="技术" value="技术"/>
+            <el-option label="复合" value="复合"/>
+            <el-option label="情绪" value="情绪"/>
+            <!-- 可根据实际业务补充更多类别 -->
+          </el-select>
+        </el-form-item>
         <el-form-item label="因子描述" prop="description">
           <el-input type="textarea" v-model="derivativeForm.description" placeholder="请输入描述" />
         </el-form-item>
@@ -71,12 +92,49 @@
               <el-option v-for="f in availableFactors" :key="f.id" :label="f.name" :value="f.id" />
             </el-select>
             <el-input-number v-model="item.weight" :min="0" :max="1" :step="0.01" style="margin:0 8px;" :precision="2" />
-            <el-button icon="el-icon-delete" @click="removeBaseFactor(idx)" circle />
+            <el-button icon="el-icon-delete" @click="derivativeForm.baseFactors.splice(idx,1)" circle type="danger" size="small" v-if="derivativeForm.baseFactors.length > 1" />
           </div>
-          <el-button type="text" @click="addBaseFactor" icon="el-icon-plus">添加因子</el-button>
+          <el-button
+            type="primary"
+            plain
+            @click="derivativeForm.baseFactors.push({id:'',weight:0})"
+            icon="el-icon-plus"
+            size="small"
+            style="margin-top: 8px; margin-left: 0; border-radius: 6px;"
+          >添加基础因子</el-button>
+          <el-alert
+            v-if="weightSum > 1"
+            title="所有基础因子的权重之和不能超过1"
+            type="error"
+            show-icon
+            style="margin-top: 8px; margin-bottom: 0;"
+          />
+        </el-form-item>
+        <el-form-item label="公式" prop="formula">
+          <el-input v-model="derivativeForm.formula" placeholder="如：0.5*A+0.5*B" />
+          <div style="margin-top: 4px;">
+            <el-tag
+              v-for="item in derivativeForm.baseFactors"
+              :key="item.id"
+              type="info"
+              style="margin-right: 4px;"
+            >{{ getFactorName(item.id) }}</el-tag>
+          </div>
+          <div style="margin-top: 4px; color: #888; font-size: 13px;">
+            <span v-for="(item, idx) in derivativeForm.baseFactors" :key="'var'+idx" style="margin-right: 12px;">
+              {{ String.fromCharCode(65+idx) }} = {{ getFactorName(item.id) }}
+            </span>
+          </div>
+          <el-button type="primary" size="mini" style="margin-top: 8px;" @click="previewFormula">预览公式</el-button>
+          <div v-if="formulaPreviewResult" style="margin-top: 8px; color: #409EFF;">
+            预览结果：{{ formulaPreviewResult }}
+          </div>
+          <div v-if="formulaPreviewError" style="margin-top: 8px; color: #F56C6C;">
+            公式错误：{{ formulaPreviewError }}
+          </div>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitDerivativeFactor">创建因子</el-button>
+          <el-button type="primary" @click="submitDerivativeFactor" :disabled="weightSum > 1">创建因子</el-button>
           <el-button @click="resetDerivativeForm">重置</el-button>
         </el-form-item>
       </el-form>
@@ -84,42 +142,60 @@
 
     <!-- 编辑/添加因子弹窗 -->
     <el-dialog v-model="showDialog" :title="dialogTitle" width="600px">
-      <el-form :model="editForm" label-width="100px">
+      <el-form :model="editForm" label-width="100px" class="factor-form-dialog">
+        <el-divider content-position="left">基础信息</el-divider>
         <el-form-item label="类型" required>
-          <el-select v-model="editForm.type" placeholder="请选择类型">
+          <el-select v-model="editForm.type" placeholder="请选择类型" style="width: 200px;">
             <el-option label="普通" value="普通"/>
             <el-option label="衍生" value="衍生"/>
           </el-select>
         </el-form-item>
-        <el-form-item label="因子名称"><el-input v-model="editForm.name" /></el-form-item>
-        <el-form-item label="因子代码"><el-input v-model="editForm.code" /></el-form-item>
-        <el-form-item label="类别"><el-input v-model="editForm.category" /></el-form-item>
-        <el-form-item label="描述"><el-input type="textarea" v-model="editForm.description" /></el-form-item>
+        <el-form-item label="因子名称" required>
+          <el-input v-model="editForm.name" placeholder="请输入因子名称" />
+        </el-form-item>
+        <el-form-item label="因子代码">
+          <el-input v-model="editForm.code" placeholder="请输入因子代码" />
+        </el-form-item>
+        <el-form-item label="类别">
+          <el-input v-model="editForm.category" placeholder="请输入类别" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input type="textarea" v-model="editForm.description" placeholder="请输入描述" />
+        </el-form-item>
         <template v-if="editForm.type === '衍生'">
-          <el-form-item label="基础因子" required>
-            <div class="base-factor-list">
-              <el-card
+          <el-divider content-position="left">基础因子</el-divider>
+          <el-form-item label-width="0">
+            <div class="base-factor-list-modern">
+              <div
                 v-for="(item, idx) in editForm.baseFactors"
                 :key="idx"
-                class="base-factor-card"
-                shadow="hover"
+                class="base-factor-row"
               >
-                <div class="base-factor-content">
-                  <el-select v-model="item.id" placeholder="选择因子" style="width: 160px;" filterable>
-                    <el-option v-for="f in availableFactors" :key="f.id" :label="f.name" :value="f.id" />
-                  </el-select>
-                  <el-input-number v-model="item.weight" :min="0" :max="1" :step="0.01" :precision="2" style="margin-left: 12px;" />
-                  <el-button icon="el-icon-delete" @click="removeBaseFactor(idx)" circle type="danger" style="margin-left: 12px;" />
-                </div>
-              </el-card>
-              <el-button type="primary" @click="addBaseFactor" icon="el-icon-plus" class="add-base-factor-btn">添加基础因子</el-button>
+                <el-select v-model="item.id" placeholder="选择因子" style="width: 140px;" filterable size="small">
+                  <el-option v-for="f in availableFactors" :key="f.id" :label="f.name" :value="f.id" />
+                </el-select>
+                <el-input-number v-model="item.weight" :min="0" :max="1" :step="0.01" :precision="2" style="width: 80px; margin: 0 8px;" size="small" />
+                <el-button icon="el-icon-delete" @click="removeBaseFactor(idx)" circle type="danger" size="small" class="delete-btn-modern" />
+              </div>
+              <el-button
+                type="primary"
+                plain
+                @click="addBaseFactor"
+                icon="el-icon-plus"
+                size="small"
+                style="margin-top: 8px; margin-left: 0; border-radius: 6px;"
+              >
+                添加基础因子
+              </el-button>
             </div>
           </el-form-item>
         </template>
       </el-form>
       <template #footer>
-        <el-button @click="showDialog = false">取消</el-button>
-        <el-button type="primary" @click="saveFactor">保存</el-button>
+        <div style="text-align: right;">
+          <el-button @click="showDialog = false">取消</el-button>
+          <el-button v-if="isAdminUser" type="primary" @click="saveFactor">保存</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -128,6 +204,7 @@
 <script>
 import { factorApi } from '../api/factor'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { isAdmin } from '@/utils/auth'
 
 export default {
   name: 'FactorManagement',
@@ -153,16 +230,26 @@ export default {
       // 衍生因子表单
       derivativeForm: {
         name: '',
+        code: '',
+        category: '',
         description: '',
-        baseFactors: [ { id: '', weight: 1 } ]
+        baseFactors: [ { id: '', weight: 0 } ],
+        formula: ''
       },
       derivativeRules: {
         name: [{ required: true, message: '请输入因子名称', trigger: 'blur' }],
+        code: [{ required: true, message: '请输入因子代码', trigger: 'blur' }],
+        category: [{ required: true, message: '请选择因子种类', trigger: 'change' }]
       },
-      availableFactors: []
+      availableFactors: [],
+      formulaPreviewResult: '',
+      formulaPreviewError: '',
     }
   },
   computed: {
+    isAdminUser() {
+      return isAdmin()
+    },
     filteredFactors() {
       let result = this.factors
       if (this.searchQuery) {
@@ -175,19 +262,78 @@ export default {
         result = result.filter(f => f.type === this.selectedType)
       }
       return result
+    },
+    weightSum() {
+      return this.derivativeForm.baseFactors.reduce((sum, f) => sum + Number(f.weight || 0), 0)
     }
   },
   methods: {
     async loadFactors() {
       this.loading = true
       try {
-        const data = await factorApi.getAllFactors()
-        this.factors = data.data || data
-        this.availableFactors = this.factors
+        console.log('[Debug] 开始加载因子数据...');
+        const response = await factorApi.getAllFactors();
+        console.log('[Debug] API响应数据:', response);
+        
+        // 处理ApiResponse格式的数据
+        let factorList = [];
+        if (response && response.code === 200) {
+          // 成功响应
+          if (Array.isArray(response.data)) {
+            factorList = response.data;
+          } else {
+            console.warn('[Debug] response.data不是数组:', response.data);
+            factorList = [];
+          }
+        } else if (Array.isArray(response)) {
+          // 直接返回数组的情况
+          factorList = response;
+        } else if (response && Array.isArray(response.data)) {
+          // 其他可能的格式
+          factorList = response.data;
+        } else {
+          console.warn('[Debug] 意外的数据格式:', response);
+          factorList = [];
+        }
+        
+        this.factors = factorList;
+        this.availableFactors = this.factors;
+        console.log('[Debug] 成功加载因子数量:', this.factors.length);
       } catch (error) {
-        ElMessage.error(`获取因子数据失败: ${error.message || '未知错误'}`)
+        console.error('[Debug] 加载因子失败:', error);
+        this.factors = [];
+        this.availableFactors = [];
+        
+        // 根据错误类型显示不同的错误信息
+        if (error.response) {
+          // 服务器响应了错误状态码
+          const status = error.response.status;
+          const responseData = error.response.data;
+          console.log('[Debug] 后端响应数据:', responseData);
+          
+          let errorMessage = '';
+          if (responseData && responseData.message) {
+            errorMessage = responseData.message;
+          } else if (responseData && responseData.msg) {
+            errorMessage = responseData.msg;
+          } else if (responseData && responseData.error) {
+            errorMessage = responseData.error;
+          } else if (typeof responseData === 'string') {
+            errorMessage = responseData;
+          } else {
+            errorMessage = error.response.statusText || '未知错误';
+          }
+          
+          ElMessage.error(`加载失败 (${status}): ${errorMessage}`);
+        } else if (error.request) {
+          // 请求已发出但没有收到响应
+          ElMessage.error('无法连接到服务器，请检查后端服务是否运行');
+        } else {
+          // 其他错误
+          ElMessage.error('加载因子数据失败: ' + (error.message || '未知错误'));
+        }
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
     addFactor() {
@@ -248,7 +394,7 @@ export default {
     },
     // 衍生因子相关
     resetDerivativeForm() {
-      this.derivativeForm = { name: '', description: '', baseFactors: [ { id: '', weight: 1 } ] }
+      this.derivativeForm = { name: '', code: '', category: '', description: '', baseFactors: [ { id: '', weight: 0 } ], formula: '' }
     },
     async submitDerivativeFactor() {
       this.$refs.derivativeFormRef.validate(async (valid) => {
@@ -261,12 +407,20 @@ export default {
           return
         }
         try {
-          await factorApi.createDerivativeFactor({
+          // 修正：将id转换为baseFactorId
+          const baseFactors = this.derivativeForm.baseFactors.map(item => ({
+            baseFactorId: item.id,
+            weight: item.weight
+          }));
+          await factorApi.createFactor({
             name: this.derivativeForm.name,
+            code: this.derivativeForm.code,
+            category: this.derivativeForm.category,
             description: this.derivativeForm.description,
-            baseFactors: this.derivativeForm.baseFactors,
+            baseFactors,
+            formula: this.derivativeForm.formula,
             type: '衍生'
-          })
+          });
           ElMessage.success('创建成功')
           this.resetDerivativeForm()
           this.loadFactors()
@@ -282,6 +436,48 @@ export default {
       if (isNaN(d.getTime())) return val;
       return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
     },
+    getFactorName(id) {
+      const f = this.availableFactors.find(f => f.id === id);
+      return f ? f.name : id;
+    },
+    async previewFormula() {
+      this.formulaPreviewResult = '';
+      this.formulaPreviewError = '';
+      if (!this.derivativeForm.formula) {
+        this.formulaPreviewError = '请输入公式';
+        return;
+      }
+      try {
+        // 修正：将id转换为baseFactorId
+        const baseFactors = this.derivativeForm.baseFactors.map(item => ({
+          baseFactorId: item.id,
+          weight: item.weight
+        }));
+        const res = await factorApi.previewFormula({
+          formula: this.derivativeForm.formula,
+          baseFactors
+        });
+        if (res.data && res.data.result) {
+          this.formulaPreviewResult = res.data.result;
+        } else {
+          this.formulaPreviewError = res.data?.msg || '公式预览失败';
+        }
+      } catch (e) {
+        this.formulaPreviewError = e?.message || '公式预览失败';
+      }
+    },
+  },
+  watch: {
+    'derivativeForm.baseFactors': {
+      handler(newVal) {
+        const vars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const formula = newVal
+          .map((item, idx) => `${Number(item.weight) || 0}*${vars[idx]}`)
+          .join('+');
+        this.derivativeForm.formula = formula;
+      },
+      deep: true
+    }
   },
   mounted() {
     this.loadFactors()
@@ -314,27 +510,24 @@ export default {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
-.base-factor-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-start;
+.factor-form-dialog .el-form-item {
+  margin-bottom: 18px;
 }
-.base-factor-card {
-  width: 350px;
-  min-height: 60px;
-  position: relative;
+.base-factor-list-modern {
+  background: #f7f8fa;
+  border-radius: 8px;
+  padding: 16px 16px 8px 16px;
   display: flex;
-  align-items: center;
-  padding: 12px 16px;
+  flex-direction: column;
+  gap: 0;
 }
-.base-factor-content {
+.base-factor-row {
   display: flex;
   align-items: center;
-  width: 100%;
+  margin-bottom: 8px;
+  background: transparent;
 }
-.add-base-factor-btn {
-  height: 40px;
-  margin-top: 8px;
+.delete-btn-modern {
+  margin-left: 8px;
 }
 </style>

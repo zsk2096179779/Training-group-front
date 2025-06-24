@@ -1,18 +1,26 @@
-<script>
+<script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { isAuthenticated } from '@/utils/auth'
 import Navbar from './components/Navbar.vue'
 
-export default {
-  name: 'App',
-  components: {
-    Navbar
+const route = useRoute()
+
+// 判断是否显示导航栏
+const showNavbar = computed(() => {
+  // 登录和注册页面不显示导航栏
+  if (route.name === 'Login' || route.name === 'LoginPage' || route.name === 'Register') {
+    return false
   }
-}
+  // 其他页面需要登录才显示导航栏
+  return isAuthenticated()
+})
 </script>
 
 <template>
   <div class="app">
-    <Navbar />
-    <main class="main-content">
+    <Navbar v-if="showNavbar" />
+    <main class="main-content" :class="{ 'no-navbar': !showNavbar }">
       <router-view></router-view>
     </main>
   </div>
@@ -41,5 +49,9 @@ body {
 .main-content {
   flex: 1;
   padding: 1rem;
+}
+
+.main-content.no-navbar {
+  padding: 0;
 }
 </style>

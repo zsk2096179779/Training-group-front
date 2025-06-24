@@ -13,5 +13,9 @@ export function deleteDataSourceConfig(id) {
   return request({ url: `/api/datasource/delete/${id}`, method: 'post' })
 }
 export function importDataSource(id) {
-  return request({ url: `/api/datasource/import/${id}`, method: 'post' })
+  return request.post(`/api/datasources/import/${id}`);
+}
+
+export function runPythonScript(data) {
+  return request.post('/api/datasources/run-script', data);
 } 

@@ -1,22 +1,71 @@
 <template>
   <nav class="navbar">
     <div class="navbar-brand">
-      <router-link to="/" class="logo">Training Group</router-link>
+      <router-link to="/datasource" class="logo">Training Group</router-link>
     </div>
     <div class="navbar-menu">
       <!-- <router-link to="/" class="nav-item">首页</router-link> -->
-      <router-link to="/datasource" class="nav-item">数据源配置</router-link>
+      <router-link v-if="isAdminUser" to="/datasource" class="nav-item">数据源配置</router-link>
       <router-link to="/factors" class="nav-item">因子管理</router-link>
       <router-link to="/analysis" class="nav-item">数据分析</router-link>
       <router-link to="/factor-tree" class="nav-item">因子树管理</router-link>
-      <router-link to="/settings" class="nav-item">设置</router-link>
+    </div>
+    <div class="navbar-user" v-if="userInfo">
+      <el-dropdown @command="handleCommand">
+        <span class="user-info">
+          <el-avatar :size="32" :src="userInfo.avatar">
+            {{ userInfo.username?.charAt(0).toUpperCase() }}
+          </el-avatar>
+          <span class="username">{{ userInfo.username }}</span>
+          <el-icon><ArrowDown /></el-icon>
+        </span>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="profile">个人信息</el-dropdown-item>
+            <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
     </div>
   </nav>
 </template>
 
-<script>
-export default {
-  name: 'Navbar'
+<script setup>
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
+import { getUserInfo, clearAuth, isAdmin } from '@/utils/auth'
+
+const router = useRouter()
+const userInfo = ref(null)
+
+// 计算属性，判断当前用户是否是管理员
+const isAdminUser = computed(() => isAdmin())
+
+onMounted(() => {
+  // 获取用户信息
+  userInfo.value = getUserInfo()
+})
+
+const handleCommand = async (command) => {
+  if (command === 'logout') {
+    try {
+      await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+      // 只做本地清理，不请求后端
+      clearAuth()
+      ElMessage.success('已退出登录')
+      router.push('/login')
+    } catch {
+      // 用户取消
+    }
+  } else if (command === 'profile') {
+    ElMessage.info('个人信息功能开发中...')
+  }
 }
 </script>
 
@@ -67,5 +116,30 @@ export default {
 .router-link-active {
   background-color: rgba(255,255,255,0.2);
   color: #64ffda;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.user-info:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.username {
+  font-size: 14px;
+  font-weight: 500;
 }
 </style> 
