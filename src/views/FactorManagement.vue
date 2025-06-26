@@ -10,7 +10,6 @@
     <el-tabs v-model="currentTab" style="margin-bottom: 16px;">
       <el-tab-pane label="因子列表" name="list"></el-tab-pane>
       <el-tab-pane label="创建衍生因子" name="derivative"></el-tab-pane>
-      <el-tab-pane label="风格投资因子" name="style"></el-tab-pane>
     </el-tabs>
     <el-card class="main-card" v-if="currentTab === 'list'">
       <el-form :inline="true" class="filter-form">
@@ -213,8 +212,7 @@ export default {
       currentTab: 'list',
       tabs: [
         { id: 'list', name: '因子列表' },
-        { id: 'derivative', name: '创建衍生因子' },
-        { id: 'style', name: '风格投资因子' }
+        { id: 'derivative', name: '创建衍生因子' }
       ],
       searchQuery: '',
       selectedCategory: '',

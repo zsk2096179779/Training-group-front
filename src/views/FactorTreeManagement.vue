@@ -23,7 +23,6 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        <el-button v-if="isAdminUser" type="primary" @click="addTreeType">新增场景</el-button>
         <el-button v-if="isAdminUser && currentTreeType" @click="showRenameDialog = true">重命名</el-button>
         <el-button v-if="isAdminUser && currentTreeType" type="danger" @click="handleDeleteTree">删除</el-button>
         <el-button @click="fetchTree">刷新</el-button>
@@ -102,7 +101,7 @@
       <section class="factor-section">
         <el-card shadow="hover">
           <h3 style="margin-bottom: 12px;">当前节点下因子</h3>
-          <el-table :data="currentNodeFactors" v-loading="factorLoading" style="width: 100%;">
+          <el-table :data="currentNodeFactors" v-loading="factorLoading" style="width: 100%;" @row-click="handleFactorRowClick" :row-class-name="factorRowClassName">
             <el-table-column prop="name" label="因子名称"/>
             <el-table-column prop="code" label="因子代码"/>
             <el-table-column prop="type" label="类型"/>
@@ -110,6 +109,12 @@
               <div style="padding: 32px 0; color: #999;">暂无因子数据</div>
             </template>
           </el-table>
+        </el-card>
+        <!-- 新增：因子历史走势图表区 -->
+        <el-card style="margin-top: 24px;">
+          <h3>因子历史走势</h3>
+          <v-chart :option="chartOption" autoresize style="height: 350px;" v-if="chartOption" v-loading="chartLoading" />
+          <div v-else style="color: #aaa; text-align: center; padding: 40px 0;">请选择节点并加载数据</div>
         </el-card>
       </section>
     </main>
@@ -126,15 +131,6 @@
       <li @click="addFactorToNode">添加因子至节点</li>
     </ul>
 
-    <!-- 新增场景弹窗 -->
-    <el-dialog v-model="showAddSceneDialog" title="新增场景" width="300px">
-      <el-input v-model="newSceneName" placeholder="请输入场景名称" />
-      <template #footer>
-        <el-button @click="showAddSceneDialog = false">取消</el-button>
-        <el-button type="primary" @click="confirmAddScene">确定</el-button>
-      </template>
-    </el-dialog>
-
     <!-- 重命名树弹窗 -->
     <el-dialog v-model="showRenameDialog" title="重命名树" width="300px">
       <el-input v-model="renameValue" placeholder="请输入新名称" />
@@ -150,18 +146,20 @@
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
-import { getFactorTree, getFactorsByNodeId, updateNodeOrder } from '@/api/factor'
+import { getFactorTree, getFactorsByNodeId, updateNodeOrder, getFactorTreeScenes } from '@/api/factor'
 import { isAdmin } from '@/utils/auth' // 导入 isAdmin
 import request from '@/api/request' // 导入request实例
 import { saveAs } from 'file-saver'
+// ECharts集成
+import { use } from 'echarts/core'
+import VChart from 'vue-echarts'
+import { LineChart } from 'echarts/charts'
+import { TitleComponent, TooltipComponent, LegendComponent, GridComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+use([LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer])
 
-// 业务场景历史/建议（可扩展为接口获取）
-const sceneOptions = ref([
-  { value: 'XJ', label: '选基因子树' },
-  { value: 'QY', label: '量化投研因子树' },
-  { value: 'TS', label: '特色数据输出' },
-  { value: '分类', label: '分类' }
-])
+// 业务场景选项由接口动态获取
+const sceneOptions = ref([])
 const currentTreeType = ref('')
 const filterText = ref('')
 const treeData = ref([])
@@ -172,10 +170,6 @@ const currentNode = ref(null)
 const currentNodeFactors = ref([])
 const factorLoading = ref(false)
 const contextMenu = ref({ visible: false, left: 0, top: 0, node: null });
-
-// 新增场景弹窗相关
-const showAddSceneDialog = ref(false)
-const newSceneName = ref('')
 
 // 重命名树相关
 const showRenameDialog = ref(false)
@@ -268,16 +262,44 @@ const fetchTree = async () => {
   }
 }
 
+// 加载节点下因子历史数据并渲染图表
+async function loadNodeFactorHistory(nodeId) {
+  chartLoading.value = true
+  chartOption.value = null
+  try {
+    const res = await request.get('/api/factors/history', { params: { nodeId } })
+    let data = res.data || []
+    if (!Array.isArray(data)) {
+      data = [data]
+    }
+    chartOption.value = {
+      tooltip: { trigger: 'axis' },
+      legend: { data: data.map(d => d.name) },
+      xAxis: { type: 'category', data: data[0]?.dates || [] },
+      yAxis: { type: 'value' },
+      series: data.map(d => ({ name: d.name, type: 'line', data: d.values }))
+    }
+  } catch (e) {
+    chartOption.value = null
+    ElMessage.error('加载因子历史数据失败')
+  } finally {
+    chartLoading.value = false
+  }
+}
+
 // 节点点击
 const handleNodeClick = async (data) => {
   currentNode.value = data
   factorLoading.value = true
+  selectedFactorId.value = null
   try {
     const res = await getFactorsByNodeId(data.id)
-    // 兼容后端返回格式
     currentNodeFactors.value = res.data?.data || res.data || []
+    // 只传 nodeId，展示该节点及其所有子因子的曲线
+    await loadNodeFactorHistory(data.id)
   } catch (e) {
     currentNodeFactors.value = []
+    chartOption.value = null
     ElMessage.error('获取因子失败')
   } finally {
     factorLoading.value = false
@@ -304,29 +326,6 @@ const addNode = () => ElMessage.info('TODO: 新增节点');
 const renameNode = () => ElMessage.info('TODO: 重命名节点');
 const deleteNode = () => ElMessage.info('TODO: 删除节点');
 const addFactorToNode = () => ElMessage.info('TODO: 添加因子');
-
-// 新增场景按钮点击事件
-const addTreeType = () => {
-  showAddSceneDialog.value = true
-  newSceneName.value = ''
-}
-
-// 确认新增场景
-const confirmAddScene = () => {
-  if (!newSceneName.value.trim()) {
-    ElMessage.warning('请输入场景名称')
-    return
-  }
-  if (sceneOptions.value.some(item => item.label === newSceneName.value.trim())) {
-    ElMessage.warning('该场景已存在')
-    return
-  }
-  const newValue = newSceneName.value.trim()
-  sceneOptions.value.push({ label: newValue, value: newValue })
-  currentTreeType.value = newValue
-  showAddSceneDialog.value = false
-  fetchTree()
-}
 
 const handleNodeDrop = async (draggingNode, dropNode, dropType) => {
   let newParentId, newSortOrder;
@@ -450,6 +449,66 @@ const fetchTreeTypes = async () => {
   // 否则可手动维护
 }
 
+const chartOption = ref(null)
+const chartLoading = ref(false)
+
+const selectedFactorId = ref(null)
+
+// 点击表格行
+const handleFactorRowClick = async (row) => {
+  selectedFactorId.value = row.id
+  // 传 nodeId 和 factorId，只展示该因子的曲线
+  await loadFactorHistoryById(row.id)
+}
+
+// 加载单个因子的历史
+async function loadFactorHistoryById(factorId) {
+  chartLoading.value = true
+  chartOption.value = null
+  try {
+    const res = await request.get('/api/factors/history', { params: { nodeId: currentNode.value.id, factorId } })
+    let data = res.data || []
+    if (!Array.isArray(data)) {
+      data = [data]
+    }
+    chartOption.value = {
+      tooltip: { trigger: 'axis' },
+      legend: { data: data.map(d => d.name) },
+      xAxis: { type: 'category', data: data[0]?.dates || [] },
+      yAxis: { type: 'value' },
+      series: data.map(d => ({ name: d.name, type: 'line', data: d.values }))
+    }
+  } catch (e) {
+    chartOption.value = null
+    ElMessage.error('加载因子历史数据失败')
+  } finally {
+    chartLoading.value = false
+  }
+}
+
+// 表格高亮选中行
+const factorRowClassName = ({ row }) => {
+  return row.id === selectedFactorId.value ? 'selected-factor-row' : ''
+}
+
+// 页面加载时获取业务场景列表
+onMounted(async () => {
+  try {
+    const res = await getFactorTreeScenes();
+    // 假设后端返回 [{ value, label }] 或 [{ code, name }]
+    if (Array.isArray(res.data)) {
+      // 兼容不同字段名
+      sceneOptions.value = res.data.map(item => ({
+        value: item.value ?? item.code ?? item.name,
+        label: item.label ?? item.name ?? item.value
+      }));
+    }
+  } catch (e) {
+    sceneOptions.value = [];
+    ElMessage.error('获取业务场景失败');
+  }
+})
+
 onMounted(fetchTree)
 </script>
 
@@ -481,9 +540,32 @@ onMounted(fetchTree)
   flex: 1;
   min-width: 400px;
 }
+.el-card {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 24px #0001 !important;
+  border: none !important;
+}
+.el-table th, .el-table td {
+  font-size: 15px;
+}
+.el-table th {
+  background: #f5f7fa;
+  font-weight: bold;
+}
+.el-table__row:hover {
+  background: #e6f7ff !important;
+}
 .tree-node-label {
   font-size: 15px;
-  color: #333;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.tree-node-label:hover {
+  background: #e6f7ff;
+}
+.selected-factor-row {
+  background: #e6f7ff !important;
 }
 
 .context-menu {

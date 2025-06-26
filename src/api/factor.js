@@ -55,4 +55,12 @@ export function updateNodeOrder(data) {
   return request.post('/api/factor-tree/updateOrder', data);
 }
 
+// 获取因子树业务场景列表
+export function getFactorTreeScenes() {
+  return request({
+    url: '/api/factor-tree/scenes',
+    method: 'get'
+  });
+}
+
 // 注意：后端接口返回格式为 { code, msg, data }，前端应使用 res.data.data

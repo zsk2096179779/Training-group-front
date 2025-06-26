@@ -3,13 +3,12 @@
     <div class="navbar-brand">
       <router-link to="/datasource" class="logo">Training Group</router-link>
     </div>
-    <div class="navbar-menu">
-      <!-- <router-link to="/" class="nav-item">首页</router-link> -->
-      <router-link v-if="isAdminUser" to="/datasource" class="nav-item">数据源配置</router-link>
-      <router-link to="/factors" class="nav-item">因子管理</router-link>
-      <router-link to="/analysis" class="nav-item">数据分析</router-link>
-      <router-link to="/factor-tree" class="nav-item">因子树管理</router-link>
-    </div>
+    <el-menu class="navbar-menu" mode="horizontal" :router="true" background-color="transparent" text-color="#fff" active-text-color="#64ffda" style="border-bottom: none;">
+      <el-menu-item v-if="isAdminUser" index="/datasource">数据源配置</el-menu-item>
+      <el-menu-item index="/factors">因子管理</el-menu-item>
+      <el-menu-item index="/factor-tree">因子树管理</el-menu-item>
+      <el-menu-item index="/style-factor-management">风格投资因子管理</el-menu-item>
+    </el-menu>
     <div class="navbar-user" v-if="userInfo">
       <el-dropdown @command="handleCommand">
         <span class="user-info">
@@ -97,24 +96,26 @@ const handleCommand = async (command) => {
 .navbar-menu {
   display: flex;
   gap: 2rem;
+  background: transparent;
+  border-bottom: none;
 }
 
-.nav-item {
+.el-menu--horizontal > .el-menu-item {
   color: white;
-  text-decoration: none;
   font-size: 1rem;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   transition: all 0.3s ease;
+  background: transparent;
 }
 
-.nav-item:hover {
-  background-color: rgba(255,255,255,0.1);
+.el-menu--horizontal > .el-menu-item.is-active {
+  background-color: rgba(255,255,255,0.2);
   color: #64ffda;
 }
 
-.router-link-active {
-  background-color: rgba(255,255,255,0.2);
+.el-menu--horizontal > .el-menu-item:hover {
+  background-color: rgba(255,255,255,0.1);
   color: #64ffda;
 }
 

@@ -5,7 +5,6 @@ import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import DataSourceConfig from '../views/DataSourceConfig.vue'
 import FactorManagement from '../views/FactorManagement.vue'
-import Analysis from '../views/Analysis.vue'
 import FactorTreeManagement from '../views/FactorTreeManagement.vue'
 
 const routes = [
@@ -37,16 +36,15 @@ const routes = [
         meta: { requiresAuth: true }
     },
     { 
-        path: '/analysis', 
-        name: 'Analysis',
-        component: Analysis,
-        meta: { requiresAuth: true }
-    },
-    { 
         path: '/factor-tree', 
         name: 'FactorTree',
         component: FactorTreeManagement,
         meta: { requiresAuth: true }
+    },
+    {
+        path: '/style-factor-management',
+        name: 'StyleFactorManagement',
+        component: () => import('@/views/StyleFactorManagement.vue')
     }
 ]
 

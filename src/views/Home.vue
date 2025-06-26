@@ -2,16 +2,11 @@
   <div class="home">
     <div class="hero">
       <h1>欢迎使用 Training Group</h1>
-      <p>专业的因子管理和数据分析平台</p>
     </div>
     <div class="features">
       <div class="feature-card">
         <h3>因子管理</h3>
         <p>轻松管理和配置您的因子数据</p>
-      </div>
-      <div class="feature-card">
-        <h3>数据分析</h3>
-        <p>深入分析因子表现和相关性</p>
       </div>
       <div class="feature-card">
         <h3>可视化展示</h3>
@@ -44,11 +39,6 @@ export default {
   font-size: 2.5rem;
   color: #2c3e50;
   margin-bottom: 1rem;
-}
-
-.hero p {
-  font-size: 1.2rem;
-  color: #34495e;
 }
 
 .features {
