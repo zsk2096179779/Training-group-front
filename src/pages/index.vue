@@ -64,7 +64,7 @@ export default {
         // 认证成功后跳转到策略管理页面
         if (response.data.success) {
           this.$router.push({
-            path: '/strategy_manage',
+            path: '/Leader',
             query: { 
               username: this.username
             }

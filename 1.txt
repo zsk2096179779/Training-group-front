@@ -1,9 +1,10 @@
 <template>
-    <div class="flex h-screen overflow-hidden bg-gray-50">
+  <div class="common-layout">
+    <el-container class="h-screen">
       <!-- 左侧导航栏 -->
-      <div class="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+      <el-aside width="200px" class="bg-white border-r border-gray-200 flex flex-col">
         <!-- 系统标题 -->
-        <div class="p-4 border-b border-gray-200 flex items-center">
+        <div class="p-4 border-b border-gray-200 flex items-center h-[64px]">
           <el-icon class="text-blue-500 text-xl"><Monitor /></el-icon>
           <span class="ml-2 font-bold text-lg">策略管理子系统</span>
         </div>
@@ -33,20 +34,20 @@
           <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
           <span class="ml-2">管理员</span>
         </div>
-      </div>
+      </el-aside>
       
-      <!-- 右侧内容区 -->
-      <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- 顶部标题和操作 -->
-        <div class="h-16 border-b border-gray-200 bg-white px-6 flex items-center justify-between">
-          <h2 class="text-xl font-medium">策略管理</h2>
+      <el-container>
+        <!-- 右侧内容区 -->
+        <el-header class="border-b border-gray-200 bg-white flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-medium">策略管理</h2>
+          </div>
           <el-button type="primary" @click="createStrategy">
             <el-icon class="mr-1"><Plus /></el-icon>创建策略
           </el-button>
-        </div>
+        </el-header>
         
-        <!-- 主内容区 -->
-        <div class="flex-1 overflow-auto p-6">
+        <el-main class="bg-gray-50 flex-1 overflow-auto p-6">
           <!-- 策略列表 -->
           <div class="bg-white rounded-lg shadow-md mb-6">
             <div class="p-5">
@@ -135,36 +136,37 @@
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      
-      <!-- 创建策略对话框 -->
-      <el-dialog v-model="showCreateDialog" title="创建新策略" width="500px">
-        <el-form :model="newStrategy" label-width="120px">
-          <el-form-item label="策略名称">
-            <el-input v-model="newStrategy.name" />
-          </el-form-item>
-          <el-form-item label="策略类型">
-            <el-select v-model="newStrategy.type">
-              <el-option label="大类资产配置" value="assetAllocation" />
-              <el-option label="FOF组合" value="fof" />
-              <el-option label="基金指数组合" value="fundIndex" />
-              <el-option label="择时组合" value="timing" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="初始资金">
-            <el-input-number v-model="newStrategy.capital" :min="10000" :step="10000" />
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <el-button @click="showCreateDialog = false">取消</el-button>
-          <el-button type="primary" @click="confirmCreate">创建</el-button>
-        </template>
-      </el-dialog>
-    </div>
-  </template>
-  
-  <script setup>
+        </el-main>
+      </el-container>
+    </el-container>
+    
+    <!-- 创建策略对话框 -->
+    <el-dialog v-model="showCreateDialog" title="创建新策略" width="500px">
+      <el-form :model="newStrategy" label-width="120px">
+        <el-form-item label="策略名称">
+          <el-input v-model="newStrategy.name" />
+        </el-form-item>
+        <el-form-item label="策略类型">
+          <el-select v-model="newStrategy.type">
+            <el-option label="大类资产配置" value="assetAllocation" />
+            <el-option label="FOF组合" value="fof" />
+            <el-option label="基金指数组合" value="fundIndex" />
+            <el-option label="择时组合" value="timing" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="初始资金">
+          <el-input-number v-model="newStrategy.capital" :min="10000" :step="10000" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showCreateDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmCreate">创建</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
   import { ref, computed, onMounted } from 'vue'
   import { 
     Monitor, Menu, Plus, DataLine, Setting, User, Search 
