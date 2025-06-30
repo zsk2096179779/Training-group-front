@@ -64,7 +64,7 @@ export default {
         // 认证成功后跳转到策略管理页面
         if (response.data.success) {
           this.$router.push({
-            path: '/Leader',
+            path: '/strategy-management',
             query: { 
               username: this.username
             }
@@ -74,7 +74,7 @@ export default {
         }
       } catch (error) {
         console.error('认证请求失败', error);
-        this.errorMessage = error.response?.data?.message || "网络错误，请稍后重试";
+        this.errorMessage = error.response?.data?.message || "认证请求失败";
       } finally {
         this.loading = false;
       }

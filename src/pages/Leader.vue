@@ -35,7 +35,7 @@
             @click="navigateTo('/strategy-monitoring')"
           >
             <el-icon><DataLine /></el-icon>
-            <span>策略监控</span>
+            <span>监控预警</span>
           </div>
           
           <div 
@@ -44,7 +44,7 @@
             @click="navigateTo('/rebalance-setting')"
           >
             <el-icon><Setting /></el-icon>
-            <span>再平衡设置</span>
+            <span>配置管理</span>
           </div>
         </div>
         
@@ -53,9 +53,6 @@
           <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
           <span class="user-name">{{ username }}</span>
         </div>
-        
-        <!-- 分隔线 -->
-        <div class="divider">———————————————</div>
       </el-aside>
       
       <!-- 右侧内容区 -->
