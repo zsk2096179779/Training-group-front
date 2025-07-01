@@ -7,6 +7,7 @@ import StrategyManagement from '../pages/StrategyManagement.vue'
 import StrategyCreation from '../pages/StrategyCreation.vue'
 import StrategyMonitoring from '../pages/StrategyMonitoring.vue'
 import RebalanceSetting from '../pages/RebalanceSetting.vue'
+import StrategyDetail from '../pages/Detail.vue'
 
 const routes = [
     { path: '/', component: Index },
@@ -17,7 +18,8 @@ const routes = [
             { path: '/strategy-management',name: 'StrategyManagement',component: StrategyManagement},
             { path: '/strategy-creation',name: 'StrategyCreation',component: StrategyCreation},
             { path: '/strategy-monitoring',name: 'StrategyMonitoring',component: StrategyMonitoring},
-            { path: '/rebalance-setting',name: 'RebalanceSetting',component: RebalanceSetting}
+            { path: '/rebalance-setting',name: 'RebalanceSetting',component: RebalanceSetting},
+            { path: '/strategy-management/Detail',name : 'StrategyDetail',component: StrategyDetail}
         ]
     },
     { path: '/:pathMatch(.*)*', component: NotFound }, 

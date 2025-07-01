@@ -119,7 +119,9 @@ import { ref, computed, onMounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage,ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 // 加载状态
 const loading = ref(false)
 
@@ -229,8 +231,12 @@ const getTypeName = (typeCode) => {
 
 // 策略操作函数
 const viewDetail = (strategy) => {
-  console.log('查看策略详情:', strategy)
-  ElMessage.info(`查看策略: ${strategy.name}`)
+  router.push({
+            path: '/strategy-management/detail',
+            query: { 
+              strategyId: strategy.id
+            }
+  });
 }
 
 // 停止策略
