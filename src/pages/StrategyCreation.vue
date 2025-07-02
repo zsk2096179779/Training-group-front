@@ -393,7 +393,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { 
@@ -402,233 +402,295 @@ import {
   Document, FolderChecked, PieChart, Folder,
   Clock
 } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox,ElLoading} from 'element-plus';
+import axios from 'axios';
 
-export default {
-  components: {
-    Money,
-    DocumentCopy,
-    DataAnalysis,
-    AlarmClock,
-    Setting,
-    Coin,
-    SetUp,
-    DocumentChecked,
-    Document,
-    FolderChecked,
-    PieChart,
-    Folder,
-    Clock
-  },
-  setup() {
-    const router = useRouter();
-    
-    // 策略选择状态
-    const selectedStrategy = ref('');
-    const currentStep = ref(1);
-    
-    // 策略标题映射
-    const strategyTitles = {
-      'asset': '大类资产配置策略',
-      'fof': 'FOF组合策略',
-      'fund': '基金指数组合策略',
-      'timing': '择时组合策略'
-    };
-    
-    // 策略步骤配置
-    const strategySteps = {
-      'asset': [
-        { title: '选择资产类别' },
-        { title: '设置风险偏好' },
-        { title: '配置比例调整' },
-        { title: '完成策略创建' }
-      ],
-      'fof': [
-        { title: '选择FOF类型' },
-        { title: '设置参数' },
-        { title: '选择基金类别' },
-        { title: '完成策略创建' }
-      ],
-      'fund': [
-        { title: '选择目标指数' },
-        { title: '选择指数基金' },
-        { title: '设置资金分配' },
-        { title: '完成策略创建' }
-      ],
-      'timing': [
-        { title: '选择择时指标' },
-        { title: '设置交易规则' },
-        { title: '完成策略创建' }
-      ]
-    };
-    
-    // 当前策略的步骤
-    const currentSteps = computed(() => {
-      return selectedStrategy.value ? strategySteps[selectedStrategy.value] : [];
-    });
-    
-    // 当前策略标题
-    const currentStrategyTitle = computed(() => {
-      return selectedStrategy.value ? strategyTitles[selectedStrategy.value] : '';
-    });
-    
-    // 策略类型选择
-    const selectStrategy = (type) => {
-      selectedStrategy.value = type;
-      currentStep.value = 1;
-    };
-    
-    // 步骤导航
-    const nextStep = () => {
-      if (currentStep.value < currentSteps.value.length) {
-        currentStep.value++;
-      }
-    };
-    
-    const prevStep = () => {
-      if (currentStep.value > 1) {
-        currentStep.value--;
-      }
-    };
-    
-    const changeStep = (step) => {
-      if (step > 0 && step <= currentSteps.value.length) {
-        currentStep.value = step;
-      }
-    };
-    
-    // 返回上一页
-    const goBack = () => {
-      router.go(-1);
-    };
-    
-    // 完成创建
-    const finishCreation = () => {
-      // 这里添加实际创建逻辑
-      console.log('策略创建完成:', selectedStrategy.value);
-      ElMessage.success('策略创建成功！');
-    };
-    
-    // 保存策略
-    const saveStrategy = () => {
-      if (!selectedStrategy.value) {
-        ElMessage.warning('请先选择策略类型');
-        return;
-      }
-      ElMessage.success('策略已保存');
-    };
-    
-    // 启动策略
-    const launchStrategy = () => {
-      if (!selectedStrategy.value) {
-        ElMessage.warning('请先选择策略类型');
-        return;
-      }
-      ElMessage.success('策略已启动');
-    };
-    
-    // 表单数据
-    const formAsset = reactive({
-      assetClasses: ['股票', '债券'],
-      riskLevel: 3,
-      assets: [
-        { name: '股票', percent: 50 },
-        { name: '债券', percent: 30 },
-        { name: '商品', percent: 10 },
-        { name: '房地产', percent: 10 }
-      ],
-      confirmed: false
-    });
-    
-    const formFOF = reactive({
-      fofType: 'balanced',
-      fundCount: 8,
-      maxDrawdown: 15,
-      riskControl: 3,
-      fundCategories: ['股票型', '债券型'],
-      confirmed: false
-    });
-    
-    const formFund = reactive({
-      targetIndex: 'hs300',
-      totalAmount: 50000,
-      allocation: 'equal',
-      confirmed: false
-    });
-    
-    const recommendedFunds = ref([
-      { code: '510300', name: '华泰柏瑞沪深300ETF', company: '华泰柏瑞基金', fee: '0.6%' },
-      { code: '000961', name: '天弘沪深300指数A', company: '天弘基金', fee: '0.8%' },
-      { code: '110020', name: '易方达沪深300ETF联接A', company: '易方达基金', fee: '0.6%' }
-    ]);
-    
-    const formTiming = reactive({
-      indicators: ['MACD', 'RSI'],
-      buyThreshold: 30,
-      sellThreshold: 70,
-      maxPosition: 80,
-      tradeFrequency: 'daily',
-      confirmed: false
-    });
-    
-    // 辅助方法
-    const getRiskLabel = (level) => {
-      const levels = {
-        1: '保守型',
-        2: '稳健型',
-        3: '平衡型',
-        4: '进取型',
-        5: '激进型'
-      };
-      return levels[level] || '未设置';
-    };
-    
-    const getFOFTypeLabel = (type) => {
-      const types = {
-        'balanced': '平衡型FOF组合',
-        'steady': '稳健型FOF组合',
-        'growth': '增长型FOF组合',
-        'fixedIncome': '固定收益型FOF组合',
-        'global': '全球配置FOF组合'
-      };
-      return types[type] || '未设置';
-    };
-    
-    const getIndexLabel = (index) => {
-      const indexes = {
-        'hs300': '沪深300指数',
-        'zz500': '中证500指数',
-        'sz50': '上证50指数',
-        'cyb': '创业板指数',
-        'nasdaq100': '纳斯达克100指数',
-        'hsi': '恒生指数'
-      };
-      return indexes[index] || '未设置';
-    };
-    
-    return {
-      selectedStrategy,
-      currentStep,
-      currentSteps,
-      currentStrategyTitle,
-      selectStrategy,
-      nextStep,
-      prevStep,
-      changeStep,
-      saveStrategy,
-      launchStrategy,
-      finishCreation,
-      goBack,
-      formAsset,
-      formFOF,
-      formFund,
-      formTiming,
-      recommendedFunds,
-      getRiskLabel,
-      getFOFTypeLabel,
-      getIndexLabel
-    };
+const router = useRouter();
+
+// 策略选择状态
+const selectedStrategy = ref('');
+const currentStep = ref(1);
+
+// 策略标题映射
+const strategyTitles = {
+  'asset': '大类资产配置策略',
+  'fof': 'FOF组合策略',
+  'fund': '基金指数组合策略',
+  'timing': '择时组合策略'
+};
+
+// 策略步骤配置
+const strategySteps = {
+  'asset': [
+    { title: '选择资产类别' },
+    { title: '设置风险偏好' },
+    { title: '配置比例调整' },
+    { title: '完成策略创建' }
+  ],
+  'fof': [
+    { title: '选择FOF类型' },
+    { title: '设置参数' },
+    { title: '选择基金类别' },
+    { title: '完成策略创建' }
+  ],
+  'fund': [
+    { title: '选择目标指数' },
+    { title: '选择指数基金' },
+    { title: '设置资金分配' },
+    { title: '完成策略创建' }
+  ],
+  'timing': [
+    { title: '选择择时指标' },
+    { title: '设置交易规则' },
+    { title: '完成策略创建' }
+  ]
+};
+
+// 当前策略的步骤
+const currentSteps = computed(() => {
+  return selectedStrategy.value ? strategySteps[selectedStrategy.value] : [];
+});
+
+// 当前策略标题
+const currentStrategyTitle = computed(() => {
+  return selectedStrategy.value ? strategyTitles[selectedStrategy.value] : '';
+});
+
+// 策略类型选择
+const selectStrategy = (type) => {
+  selectedStrategy.value = type;
+  currentStep.value = 1;
+};
+
+// 步骤导航
+const nextStep = () => {
+  if (currentStep.value < currentSteps.value.length) {
+    currentStep.value++;
   }
-}
+};
+
+const prevStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--;
+  }
+};
+
+const changeStep = (step) => {
+  if (step > 0 && step <= currentSteps.value.length) {
+    currentStep.value = step;
+  }
+};
+
+// 完成创建
+const finishCreation = async () => {
+  // 根据当前策略类型检查确认状态
+  let confirmed = false;
+  
+  switch (selectedStrategy.value) {
+    case 'asset':
+      confirmed = formAsset.confirmed;
+      break;
+    case 'fof':
+      confirmed = formFOF.confirmed;
+      break;
+    case 'fund':
+      confirmed = formFund.confirmed;
+      break;
+    case 'timing':
+      confirmed = formTiming.confirmed;
+      break;
+  }
+  
+  if (!confirmed) {
+    ElMessage.warning('请先确认策略配置信息');
+    return;
+  }
+  try {
+    // 显示输入策略名称的对话框
+    const { value: strategyName } = await ElMessageBox.prompt('请输入策略名称', '策略命名', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputPattern: /^[\u4e00-\u9fa5a-zA-Z0-9]{2,20}$/,
+      inputErrorMessage: '策略名称需为2-20个字符(中英文/数字)'
+    });
+
+    // 根据不同策略类型准备不同的数据
+    const requestData = {
+      id: 0,
+      name: strategyName
+    };
+
+    // 添加特定策略的数据
+    switch (selectedStrategy.value) {
+      case 'asset':
+        requestData.assets = formAsset.assets;
+        requestData.riskLevel = formAsset.riskLevel;
+        requestData.id=1;
+        break;
+      case 'fof':
+        requestData.fofType = formFOF.fofType;
+        requestData.fundCount = formFOF.fundCount;
+        requestData.maxDrawdown = formFOF.maxDrawdown;
+        requestData.fundCategories = formFOF.fundCategories;
+        requestData.id=2;
+        break;
+      case 'fund':
+        requestData.targetIndex = formFund.targetIndex;
+        requestData.totalAmount = formFund.totalAmount;
+        requestData.allocation = formFund.allocation;
+        requestData.selectedFunds = recommendedFunds.value; // 或者用户实际选择的基金
+        requestData.id=3;
+        break;
+      case 'timing':
+        requestData.indicators = formTiming.indicators;
+        requestData.buyThreshold = formTiming.buyThreshold;
+        requestData.sellThreshold = formTiming.sellThreshold;
+        requestData.maxPosition = formTiming.maxPosition;
+        requestData.tradeFrequency = formTiming.tradeFrequency;
+        requestData.id=4;
+        break;
+    }
+    console.log(requestData);
+    // 发送请求到后端
+    const loading = ElLoading.service({ fullscreen: true, text: '正在创建策略...' });
+    try {
+      const response = await axios.post('/api/strategy-management/new', requestData, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.data.success) {
+        ElMessage.success(`策略 "${strategyName}" 创建成功！`);
+        resetForms();
+        selectedStrategy.value = '';
+        currentStep.value = 1;
+      } else {
+        ElMessage.error(`创建失败: ${response.data.message || '未知错误'}`);
+      }
+    } finally {
+      loading.close();
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('创建策略失败:', error);
+      ElMessage.error('创建失败: ' + (error.response?.data?.message || error.message || '未知错误'));
+    }
+  }
+};
+
+// 重置所有表单的函数
+const resetForms = () => {
+  // 重置资产配置表单
+  formAsset.assetClasses = ['股票', '债券'];
+  formAsset.riskLevel = 3;
+  formAsset.assets = [
+    { name: '股票', percent: 50 },
+    { name: '债券', percent: 30 },
+    { name: '商品', percent: 10 },
+    { name: '房地产', percent: 10 }
+  ];
+  formAsset.confirmed = false;
+  
+  // 重置FOF表单
+  formFOF.fofType = 'balanced';
+  formFOF.fundCount = 8;
+  formFOF.maxDrawdown = 15;
+  formFOF.riskControl = 3;
+  formFOF.fundCategories = ['股票型', '债券型'];
+  formFOF.confirmed = false;
+  
+  // 重置基金指数表单
+  formFund.targetIndex = 'hs300';
+  formFund.totalAmount = 50000;
+  formFund.allocation = 'equal';
+  formFund.confirmed = false;
+  
+  // 重置择时策略表单
+  formTiming.indicators = ['MACD', 'RSI'];
+  formTiming.buyThreshold = 30;
+  formTiming.sellThreshold = 70;
+  formTiming.maxPosition = 80;
+  formTiming.tradeFrequency = 'daily';
+  formTiming.confirmed = false;
+};
+
+// 表单数据
+const formAsset = reactive({
+  assetClasses: ['股票', '债券'],
+  riskLevel: 3,
+  assets: [
+    { name: '股票', percent: 50 },
+    { name: '债券', percent: 30 },
+    { name: '商品', percent: 10 },
+    { name: '房地产', percent: 10 }
+  ],
+  confirmed: false
+});
+
+const formFOF = reactive({
+  fofType: 'balanced',
+  fundCount: 8,
+  maxDrawdown: 15,
+  riskControl: 3,
+  fundCategories: ['股票型', '债券型'],
+  confirmed: false
+});
+
+const formFund = reactive({
+  targetIndex: 'hs300',
+  totalAmount: 50000,
+  allocation: 'equal',
+  confirmed: false
+});
+
+const recommendedFunds = ref([
+  { code: '510300', name: '华泰柏瑞沪深300ETF', company: '华泰柏瑞基金', fee: '0.6%' },
+  { code: '000961', name: '天弘沪深300指数A', company: '天弘基金', fee: '0.8%' },
+  { code: '110020', name: '易方达沪深300ETF联接A', company: '易方达基金', fee: '0.6%' }
+]);
+
+const formTiming = reactive({
+  indicators: ['MACD', 'RSI'],
+  buyThreshold: 30,
+  sellThreshold: 70,
+  maxPosition: 80,
+  tradeFrequency: 'daily',
+  confirmed: false
+});
+
+// 辅助方法
+const getRiskLabel = (level) => {
+  const levels = {
+    1: '保守型',
+    2: '稳健型',
+    3: '平衡型',
+    4: '进取型',
+    5: '激进型'
+  };
+  return levels[level] || '未设置';
+};
+
+const getFOFTypeLabel = (type) => {
+  const types = {
+    'balanced': '平衡型FOF组合',
+    'steady': '稳健型FOF组合',
+    'growth': '增长型FOF组合',
+    'fixedIncome': '固定收益型FOF组合',
+    'global': '全球配置FOF组合'
+  };
+  return types[type] || '未设置';
+};
+
+const getIndexLabel = (index) => {
+  const indexes = {
+    'hs300': '沪深300指数',
+    'zz500': '中证500指数',
+    'sz50': '上证50指数',
+    'cyb': '创业板指数',
+    'nasdaq100': '纳斯达克100指数',
+    'hsi': '恒生指数'
+  };
+  return indexes[index] || '未设置';
+};
 </script>
 
 <style scoped>
