@@ -1,0 +1,17 @@
+.logo_text {
+    font-family: "PingFang SC", cursive;
+    font-size: 120px;
+    fill: none;
+    stroke: url(#geekColor);
+    stroke-width: 4;
+    stroke-dasharray: 10 800;
+    stroke-dashoffset: 10;
+    animation: 3s linear 0s drawing forwards;
+}
+
+@keyframes drawing {
+    to {
+        stroke-dasharray: 800;
+        stroke-dashoffset: 0;
+    }
+}
