@@ -1,0 +1,22 @@
+<view class="kyc-container">
+  <view class="kyc-title">基金投资者<text class="kyc-title-blue">KYC</text>问卷</view>
+  <view wx:if="{{!submitted}}">
+    <view class="kyc-question">{{questions[current].question}}</view>
+    <view class="kyc-options">
+      <radio-group class="kyc-radio-group" bindchange="onOptionChange">
+        <label wx:for="{{questions[current].options}}" wx:key="index" class="kyc-radio-label">
+          <radio class="kyc-radio" value="{{item}}" checked="{{answers[current] === item}}" />
+          <text class="kyc-radio-text">{{item}}</text>
+        </label>
+      </radio-group>
+    </view>
+    <view class="kyc-actions">
+      <button class="kyc-btn" bindtap="onPrev" disabled="{{current === 0}}">上一题</button>
+      <button class="kyc-btn" bindtap="onNext" wx:if="{{current < questions.length - 1}}">下一题</button>
+      <button class="kyc-btn-primary" bindtap="onSubmit" wx:if="{{current === questions.length - 1}}">提交</button>
+    </view>
+  </view>
+  <view wx:else>
+    <view class="kyc-success">问卷已提交，感谢您的参与！</view>
+  </view>
+</view> 

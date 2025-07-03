@@ -1,0 +1,95 @@
+.kyc-container {
+  min-height: 100vh;
+  background: #f6f8fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 60rpx;
+}
+.kyc-title {
+  text-align: center;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #3478f6;
+  line-height: 1.3;
+  margin-bottom: 32rpx;
+}
+.kyc-title-blue {
+  color: #3478f6;
+  font-weight: bold;
+  display: block;
+  font-size: 44rpx;
+}
+.kyc-question {
+  font-size: 32rpx;
+  color: #222;
+  margin-bottom: 36rpx;
+  margin-left: 8vw;
+  align-self: flex-start;
+}
+.kyc-options {
+  width: 86vw;
+  max-width: 650rpx;
+  background: #fff;
+  border-radius: 28rpx;
+  box-shadow: 0 8rpx 32rpx rgba(52,120,246,0.08);
+  padding: 48rpx 36rpx;
+  margin-bottom: 56rpx;
+}
+.kyc-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+}
+.kyc-radio-label {
+  display: flex;
+  align-items: center;
+  padding: 18rpx 0;
+}
+.kyc-radio {
+  transform: scale(0.9);
+  margin-right: 22rpx;
+}
+.kyc-radio[checked] {
+  accent-color: #3478f6;
+}
+.kyc-radio-text {
+  font-size: 32rpx;
+  color: #222;
+}
+.kyc-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 86vw;
+  max-width: 650rpx;
+  margin-top: 24rpx;
+  gap: 24rpx;
+}
+.kyc-btn, .kyc-btn-primary {
+  flex: 1;
+  height: 88rpx;
+  font-size: 32rpx;
+  border-radius: 16rpx;
+  font-weight: bold;
+  border: 2rpx solid #3478f6;
+  background: #fff;
+  color: #3478f6;
+  transition: background 0.2s, color 0.2s;
+}
+.kyc-btn-primary {
+  background: #3478f6;
+  color: #fff;
+}
+.kyc-btn[disabled] {
+  color: #bbb;
+  border-color: #eee;
+  background: #f6f8fa;
+}
+.kyc-success {
+  font-size: 32rpx;
+  color: #4caf50;
+  margin-top: 120rpx;
+  font-weight: bold;
+  text-align: center;
+} 

@@ -1,0 +1,32 @@
+<view class="agreement-container">
+  <view class="agreement-title">请阅读并同意以下协议</view>
+  <checkbox-group bindchange="onCheckGroupChange">
+    <block wx:for="{{agreements}}" wx:key="id">
+      <view class="agreement-block">
+        <view class="agreement-name">{{item.name}}</view>
+        <scroll-view scroll-y="true" class="agreement-content">
+          <rich-text nodes="{{item.content}}"></rich-text>
+        </scroll-view>
+        <label class="agreement-checkbox">
+          <checkbox value="{{item.id}}" checked="{{item.checked}}"/>
+          <text>我已阅读并同意</text>
+        </label>
+      </view>
+    </block>
+  </checkbox-group>
+  <button class="agree-btn" disabled="{{!allChecked}}" bindtap="onAgree">全部同意</button>
+
+  <!-- 协议弹窗 -->
+  <view wx:if="{{showPopup}}" class="popup-mask">
+    <view class="popup-content">
+      <view class="popup-title">{{agreements[currentPopupIndex].name}}</view>
+      <scroll-view scroll-y="true" style="max-height: 60vh;">
+        <rich-text nodes="{{popupContent}}"></rich-text>
+      </scroll-view>
+      <view class="popup-btns">
+        <button class="disagree-btn" bindtap="onPopupDisagree">不同意</button>
+        <button class="agree-btn" bindtap="onPopupAgree">同意</button>
+      </view>
+    </view>
+  </view>
+</view> 

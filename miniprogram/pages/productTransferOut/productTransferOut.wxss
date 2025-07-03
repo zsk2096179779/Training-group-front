@@ -1,0 +1,68 @@
+.transfer-out-container {
+  padding: 32rpx;
+  background: #f7f8fa;
+}
+.transfer-header {
+  background: #fff;
+  border-radius: 14rpx;
+  margin-bottom: 32rpx;
+  padding: 28rpx 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+.product-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 8rpx;
+}
+.product-type {
+  font-size: 24rpx;
+  color: #ff9800;
+  background: #fff7e6;
+  border-radius: 10rpx;
+  padding: 2rpx 14rpx;
+  display: inline-block;
+  margin-bottom: 10rpx;
+}
+.product-amount {
+  font-size: 28rpx;
+  color: #555;
+  margin-top: 6rpx;
+}
+.transfer-form {
+  background: #fff;
+  border-radius: 14rpx;
+  padding: 24rpx 20rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+.form-label {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+.ratio-input {
+  width: 120rpx;
+  margin-left: 16rpx;
+  font-size: 28rpx;
+  border: 1rpx solid #eee;
+  border-radius: 8rpx;
+  padding: 6rpx 12rpx;
+  text-align: center;
+}
+.highlight {
+  color: #ff4d4f;
+  font-weight: bold;
+}
+.confirm-btn {
+  width: 100%;
+  background: linear-gradient(90deg, #4f8cff 0%, #ffd700 100%);
+  color: #222;
+  font-weight: bold;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  padding: 18rpx 0;
+  box-shadow: 0 2rpx 8rpx rgba(79,140,255,0.08);
+  letter-spacing: 2rpx;
+} 

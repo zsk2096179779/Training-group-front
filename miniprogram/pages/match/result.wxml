@@ -1,0 +1,5 @@
+<view class="result-container">
+  <view class="result-title">适当性匹配结果为不匹配</view>
+  <view class="result-reason">{{reason || '未通过适当性检查，无法购买该产品'}}</view>
+  <button class="back-btn" bindtap="onBack">返回首页</button>
+</view> 

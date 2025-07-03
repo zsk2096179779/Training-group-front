@@ -1,0 +1,14 @@
+<view class="transfer-out-container">
+  <view class="transfer-header">
+    <view class="product-name">{{productName}}</view>
+    <view class="product-type">{{productType}}</view>
+    <view class="product-amount">可转出份额：{{totalAmount}} 元</view>
+  </view>
+  <view class="transfer-form">
+    <view class="form-label">转出比例（%）：</view>
+    <slider min="1" max="100" step="1" value="{{ratio}}" show-value bindchange="onRatioChange" />
+    <input class="ratio-input" type="number" min="1" max="100" value="{{ratio}}" bindinput="onRatioInput" />
+    <view class="form-label">预计转出金额：<text class="highlight">{{expectedAmount}}</text> 元</view>
+  </view>
+  <button class="confirm-btn" bindtap="onConfirmTransfer">确认转出</button>
+</view> 

@@ -1,0 +1,54 @@
+<!--index.wxml-->
+<navigation-bar title="Weixin" back="{{false}}" color="black" background="#FFF"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="container">
+    <view class="header-card" style="padding-top: {{statusBarHeight}}px;">
+      <view class="index-menu-btn" bindtap="onMenuTap">
+        <image src="../../assets/menu.png" class="menu-icon" />
+      </view>
+      <view class="header-title">财富账户持仓</view>
+      <view class="header-user">欢迎，{{userInfo.nickname}}</view>
+      <view class="header-assets">
+        <view class="asset-item">
+          <view class="asset-label">总资产(元)</view>
+          <view class="asset-value">{{userInfo.totalAsset}}</view>
+        </view>
+        <view class="asset-item">
+          <view class="asset-label">累计收益(元)</view>
+          <view class="asset-value">{{userInfo.totalProfit}}</view>
+        </view>
+      </view>
+    </view>
+
+    <scroll-view scroll-y class="product-scroll">
+      <view class="product-section">
+        <view class="section-title">产品列表</view>
+        <block wx:for="{{products}}" wx:key="id">
+          <view class="product-card">
+            <view class="product-header">
+              <view class="product-name">{{item.name}}</view>
+              <view class="product-tags">
+                <text class="product-tag-blue">{{item.type}}</text>
+                <text class="product-tag-gold">{{item.risk}}</text>
+                <text class="product-tag-gold">{{item.minPurchase}}元起购</text>
+              </view>
+            </view>
+            <view class="product-body">
+              <view class="product-rate">
+                <text class="rate-value">{{item.yieldRate}}</text>
+                <text class="rate-label">%</text>
+              </view>
+              <view class="product-desc">
+                <text>{{item.yieldPeriod}}</text>
+                <text>{{item.description}}</text>
+              </view>
+            </view>
+            <view class="product-footer">
+              <button class="product-btn" bindtap="onViewDetail" data-id="{{item.id}}">查看详情</button>
+            </view>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+</scroll-view>

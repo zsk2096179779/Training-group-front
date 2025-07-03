@@ -1,0 +1,29 @@
+.result-container {
+  padding: 48rpx 32rpx;
+  text-align: center;
+  background: #f7faff;
+  min-height: 100vh;
+}
+.result-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 32rpx;
+}
+.result-title {
+  font-size: 36rpx;
+  color: #ff4d4f;
+  font-weight: bold;
+  margin-bottom: 24rpx;
+}
+.result-reason {
+  color: #333;
+  margin-bottom: 48rpx;
+}
+.back-btn {
+  background: linear-gradient(90deg, #1769fa, #bfa14a);
+  color: #fff;
+  border: none;
+  border-radius: 24rpx;
+  font-size: 32rpx;
+  padding: 20rpx 0;
+} 

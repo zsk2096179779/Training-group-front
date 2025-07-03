@@ -1,0 +1,15 @@
+<view class="register-container">
+  <view class="register-back" bindtap="goBack">
+    <text class="icon-back">←</text>
+  </view>
+  <view class="register-header">
+    <image class="register-logo" src="../../assets/logo.png" mode="aspectFit" />
+    <text class="register-title">欢迎注册基金投资平台</text>
+  </view>
+  <view class="register-form">
+    <input class="register-input" placeholder="请输入手机号" type="number" maxlength="11" bindinput="onPhoneInput" />
+    <input class="register-input" placeholder="请输入密码" password="true" bindinput="onPasswordInput" />
+    <input class="register-input" placeholder="请输入昵称" bindinput="onNicknameInput" />
+    <button class="register-btn-main" bindtap="onRegister">注册</button>
+  </view>
+</view> 

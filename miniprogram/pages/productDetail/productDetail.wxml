@@ -1,0 +1,32 @@
+<view class="detail-container">
+  <view class="detail-title">{{product.name}}</view>
+  <view class="risk-level">{{product.riskLevel}}</view>
+  <view class="detail-tags">
+    <text class="detail-tag">{{product.risk}}</text>
+    <text class="detail-tag">{{product.type}}</text>
+    <text class="detail-tag">{{product.minPurchase}}元起购</text>
+  </view>
+  <view class="detail-rate">{{product.yieldRate}}<text class="rate-label">%</text></view>
+  <view class="detail-desc">{{product.yieldPeriod}} {{product.description}}</view>
+  <view class="detail-section">
+    <text>产品介绍：</text>
+    <text>{{product.intro || '暂无详细介绍'}}</text>
+  </view>
+  <view class="date-range-bar">
+    <button class="range-btn" data-range="7" bindtap="onRangeTap" wx:class="{{selectedRange==7?'active':''}}">近7天</button>
+    <button class="range-btn" data-range="30" bindtap="onRangeTap" wx:class="{{selectedRange==30?'active':''}}">近30天</button>
+    <button class="range-btn" data-range="custom" bindtap="onRangeTap" wx:class="{{selectedRange=='custom'?'active':''}}">自定义</button>
+    <picker mode="date" value="{{customStart}}" bindchange="onStartDateChange" wx:if="{{selectedRange=='custom'}}">
+      <view class="date-picker">开始：{{customStart || '请选择'}}</view>
+    </picker>
+    <picker mode="date" value="{{customEnd}}" bindchange="onEndDateChange" wx:if="{{selectedRange=='custom'}}">
+      <view class="date-picker">结束：{{customEnd || '请选择'}}</view>
+    </picker>
+  </view>
+  <view class="curve-card">
+    <canvas canvas-id="curveCanvas" id="curveCanvas" style="width: 320px; height: 180px;"></canvas>
+  </view>
+  <button class="buy-btn" bindtap="onBuyTap" wx:if="{{!hasBought}}">立即购买</button>
+  <button class="buy-btn" bindtap="onContinueBuyTap" wx:if="{{hasBought}}">继续买入</button>
+  <button class="home-btn" bindtap="onBackHomeTap">返回主页</button>
+</view> 

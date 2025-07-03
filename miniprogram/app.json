@@ -1,0 +1,36 @@
+{
+    "pages": [
+      "pages/login/login",
+      "pages/register/register",
+      "pages/kyc/kyc",
+      "pages/index/index",
+      "pages/logs/logs",
+      "pages/productDetail/productDetail",
+      "pages/otc/open",
+      "pages/agreement/sign",
+      "pages/match/result",
+      "pages/purchase/transfer",
+      "pages/order/order",
+      "pages/productSummary/productSummary",
+      "pages/productTransferOut/productTransferOut"
+    ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
+  },
+  "style": "v2",
+  "renderer": "skyline",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "defaultContentBox": true,
+      "tagNameStyleIsolation": "legacy",
+      "disableABTest": true,
+      "sdkVersionBegin": "3.0.0",
+      "sdkVersionEnd": "15.255.255"
+    }
+  },
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

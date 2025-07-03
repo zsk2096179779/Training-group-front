@@ -1,0 +1,21 @@
+<view class="purchase-container">
+  <view class="purchase-title">财富账户持仓</view>
+  <view class="product-info">
+    <view class="product-name">{{product.name}}</view>
+    <view class="product-type">{{product.type}}</view>
+    <view class="product-id">{{product.id}}</view>
+  </view>
+  <view class="account-info">
+    <view>资金账户：{{accountNo}}</view>
+    <view>委托金额</view>
+    <input class="amount-input" type="number" placeholder="请输入计划转金额" value="{{amount}}" bindinput="onAmountInput" />
+    <view class="amount-tip">1万元起购，每日转入上限10万元</view>
+  </view>
+  <view class="risk-tip">
+    <checkbox-group bindchange="onRiskCheck">
+      <checkbox value="risk" checked="{{readRisk}}" />
+    </checkbox-group>
+    <text>风险提示：本人对转入该产品的风险已有足够了解，并自愿承担由此引起的投资风险和相关责任</text>
+  </view>
+  <button class="submit-btn" disabled="{{!canSubmit}}" bindtap="onSubmit">首次转入</button>
+</view> 

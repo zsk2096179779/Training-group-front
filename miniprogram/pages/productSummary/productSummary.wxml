@@ -1,0 +1,24 @@
+<view class="summary-container">
+  <view class="summary-header">
+    <view class="summary-title">已购产品总览</view>
+    <view class="summary-total">总购买额：<text class="total-amount">{{totalAmount}}</text> 元</view>
+  </view>
+  <view class="back-home-btn-container">
+    <button class="back-home-btn" bindtap="onBackHome">返回首页</button>
+  </view>
+  <block wx:if="{{products.length}}">
+    <block wx:for="{{products}}" wx:key="productId">
+      <view class="product-item">
+        <view class="product-name">{{item.productName}}</view>
+        <view class="product-type">{{item.productType}}</view>
+        <view class="product-amount">累计购买：<text>{{item.totalAmount}}</text> 元</view>
+        <view class="product-risk">{{item.riskLevel}}</view>
+        <button wx:if="{{item.suitability && item.suitability.matched === false}}" class="suitability-btn" data-product-id="{{item.productId}}" bindtap="onSuitabilitySign">协议签署</button>
+        <button class="transfer-out-btn" data-product-id="{{item.productId}}" data-product-name="{{item.productName}}" data-product-type="{{item.productType}}" data-total-amount="{{item.totalAmount}}" bindtap="onTransferOut">转出</button>
+      </view>
+    </block>
+  </block>
+  <block wx:else>
+    <view class="empty">暂无持仓产品</view>
+  </block>
+</view> 

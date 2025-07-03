@@ -1,0 +1,12 @@
+<view class="login-container">
+  <view class="login-header">
+    <image class="login-logo" src="../../assets/logo.png" mode="aspectFit" />
+    <text class="login-title">欢迎登录基金投资平台</text>
+  </view>
+  <view class="login-form">
+    <input class="login-input" placeholder="请输入手机号" type="number" maxlength="11" bindinput="onPhoneInput" />
+    <input class="login-input" placeholder="请输入密码" password="true" bindinput="onPasswordInput" />
+    <button class="login-btn" bindtap="onLogin">登录</button>
+    <button class="register-btn" bindtap="goRegister">注册新用户</button>
+  </view>
+</view> 

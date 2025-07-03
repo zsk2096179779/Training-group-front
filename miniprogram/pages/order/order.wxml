@@ -1,0 +1,28 @@
+<view class="order-list-container">
+  <view class="back-home-btn-container">
+    <button class="back-home-btn" bindtap="onBackHome">返回首页</button>
+  </view>
+  <block wx:if="{{orders.length}}">
+    <block wx:for="{{orders}}" wx:key="id">
+      <view class="order-item">
+        <view class="order-header">
+          <view class="order-product-name">{{item.productName}}</view>
+          <view class="order-product-type">{{item.productType}}</view>
+        </view>
+        <view class="order-info-row">
+          <text>金额：</text><text class="order-amount">{{item.amount}} 元</text>
+        </view>
+        <view class="order-info-row">
+          <text>时间：</text><text>{{item.createdAt}}</text>
+        </view>
+        <view class="order-info-row">
+          <text>状态：</text><text>{{item.status}}</text>
+        </view>
+        <button class="buy-again-btn" data-product-id="{{item.productId}}" bindtap="onBuyAgain">继续买入</button>
+      </view>
+    </block>
+  </block>
+  <block wx:else>
+    <view class="empty">暂无订单</view>
+  </block>
+</view> 

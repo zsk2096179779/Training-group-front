@@ -1,0 +1,19 @@
+<view class="open-container">
+  <view class="open-title">欢迎开户</view>
+  <view class="open-desc">开户后可进行基金申购、赎回等操作</view>
+  <form bindsubmit="onSubmit">
+    <view class="form-item">
+      <text>姓名</text>
+      <input name="name" placeholder="请输入姓名" />
+    </view>
+    <view class="form-item">
+      <text>身份证号</text>
+      <input name="idCard" placeholder="请输入身份证号" />
+    </view>
+    <view class="form-item">
+      <text>手机号</text>
+      <input name="mobile" placeholder="请输入手机号" />
+    </view>
+    <button formType="submit" class="open-btn">立即开户</button>
+  </form>
+</view> 
