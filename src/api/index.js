@@ -21,18 +21,30 @@ export function getFundId(id) {
 
 export function getFunds(ids) {
     return request({
-        url: '/combos/funds',
-        method: 'get',
-        params: {ids:ids},
-        paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' })
+            url: '/combos/funds',
+            method: 'get',
+            params: {ids: ids},
+            paramsSerializer: params => qs.stringify(params, {arrayFormat: 'repeat'})
         }
-    )}
+    )
+}
+
+
+
 
 // 创建组合
 export function createCombo(data) {
     return request({
-        url: '/create',
+        url: '/combos/create', // 修改为后端真实路径
         method: 'post',
         data
+    })
+}
+
+// 获取所有基金列表
+export function getAllFunds() {
+    return request({
+        url: '/combos/funds/all',
+        method: 'get'
     })
 }

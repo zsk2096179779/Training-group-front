@@ -22,10 +22,10 @@
 
         <el-button
             type="primary"
-            @click="$router.push('/mycombos')"
+            @click="$router.push('/create')"
             class="btn"
         >
-          自建组合
+          创建组合
         </el-button>
 
       </el-col>
@@ -134,11 +134,8 @@ export default {
     const loadCombos = async () => {
       try {
         const response = await getCombos();
-        // combosList.value = response.data;
 
-        console.log('后端返回数据:', response.data)
-
-        combosList.value = response.data.filter(combo => combo.isUserCreated == 0)
+        combosList.value = response.data.filter(combo => combo.isUserCreated == 1)
 
       } catch (error) {
         console.error('获取数据失败:', error);
