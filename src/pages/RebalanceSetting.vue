@@ -24,7 +24,11 @@
         
         <div class="form-group">
           <label class="form-label">策略类型</label>
-          <el-select v-model="selectedStrategy" class="form-control">
+          <el-select 
+            v-model="selectedStrategy" 
+            class="form-control"
+            @change="handleStrategyChange"
+          >
             <el-option 
               v-for="strategy in strategies" 
               :key="strategy.id"
@@ -41,7 +45,7 @@
             </div>
             <div class="content">
               <div class="label">当前收益</div>
-              <div class="value">+18.6%</div>
+              <div class="value">{{ profits }}</div>
             </div>
           </div>
           
@@ -51,7 +55,7 @@
             </div>
             <div class="content">
               <div class="label">运行时间</div>
-              <div class="value">32天</div>
+              <div class="value">{{ runtime }}</div>
             </div>
           </div>
           
@@ -61,7 +65,7 @@
             </div>
             <div class="content">
               <div class="label">风险评估</div>
-              <div class="value">中</div>
+              <div class="value">{{ riskLevel }}</div>
             </div>
           </div>
         </div>
@@ -77,8 +81,8 @@
         <div class="rebalance-options">
           <div 
             class="rebalance-card"
-            :class="{ active: rebalanceType === 'active' }"
-            @click="rebalanceType = 'active'"
+            :class="{ active: rebalance.activeRebalancing }"
+            @click="rebalance.activeRebalancing = true"
           >
             <div class="rebalance-title">
               <el-icon><Promotion /></el-icon>
@@ -91,8 +95,8 @@
           
           <div 
             class="rebalance-card"
-            :class="{ active: rebalanceType === 'passive' }"
-            @click="rebalanceType = 'passive'"
+            :class="{ active: !rebalance.activeRebalancing }"
+            @click="rebalance.activeRebalancing = false"
           >
             <div class="rebalance-title">
               <el-icon><Refresh /></el-icon>
@@ -107,16 +111,19 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">再平衡触发条件</label>
-            <el-radio-group v-model="rebalanceCondition" class="form-control">
-              <el-radio label="threshold">阈值触发</el-radio>
-              <el-radio label="periodic">定期触发</el-radio>
-              <el-radio label="both">阈值+定期</el-radio>
+            <el-radio-group 
+              v-model="rebalanceConditionType" 
+              class="form-control"
+            >
+              <el-radio :label="'threshold'">阈值触发</el-radio>
+              <el-radio :label="'periodic'">定期触发</el-radio>
+              <el-radio :label="'both'">阈值+定期</el-radio>
             </el-radio-group>
           </div>
           
           <div class="form-group">
             <label class="form-label">再平衡频率</label>
-            <el-select v-model="rebalanceFrequency" class="form-control">
+            <el-select v-model="rebalance.frequency" class="form-control">
               <el-option label="每日" value="daily"></el-option>
               <el-option label="每周" value="weekly"></el-option>
               <el-option label="每月" value="monthly"></el-option>
@@ -127,16 +134,18 @@
           <div class="form-group">
             <label class="form-label">调仓执行时间</label>
             <el-time-picker 
-              v-model="rebalanceTime" 
+              v-model="rebalance.executionTime" 
               placeholder="选择时间"
+              format="HH:mm"
+              value-format="HH:mm"
               class="form-control"
             ></el-time-picker>
           </div>
           
           <div class="form-group">
-            <label class="form-label">最大调仓比例: {{ maxAdjustment }}%</label>
+            <label class="form-label">最大调仓比例: {{ rebalance.maxAdjustmentRate }}%</label>
             <el-slider 
-              v-model="maxAdjustment" 
+              v-model="rebalance.maxAdjustmentRate" 
               :min="0" 
               :max="100" 
               :step="5"
@@ -145,33 +154,57 @@
           </div>
         </div>
         
-        <div v-if="rebalanceCondition !== 'periodic'">
+        <div v-if="rebalanceConditionType !== 'periodic'">
           <h3 class="sub-section-title">偏离度阈值设置</h3>
           <div class="threshold-inputs">
             <div class="form-group">
               <label class="form-label">股票偏离阈值</label>
-              <el-input v-model="thresholds.stock" placeholder="输入百分比">
+              <el-input 
+                v-model="rebalance.stockDeviation" 
+                placeholder="输入百分比"
+                type="number"
+                min="0"
+                max="100"
+              >
                 <template #append>%</template>
               </el-input>
             </div>
             
             <div class="form-group">
               <label class="form-label">债券偏离阈值</label>
-              <el-input v-model="thresholds.bond" placeholder="输入百分比">
+              <el-input 
+                v-model="rebalance.bondDeviation" 
+                placeholder="输入百分比"
+                type="number"
+                min="0"
+                max="100"
+              >
                 <template #append>%</template>
               </el-input>
             </div>
             
             <div class="form-group">
               <label class="form-label">商品偏离阈值</label>
-              <el-input v-model="thresholds.commodity" placeholder="输入百分比">
+              <el-input 
+                v-model="rebalance.commodityDeviation" 
+                placeholder="输入百分比"
+                type="number"
+                min="0"
+                max="100"
+              >
                 <template #append>%</template>
               </el-input>
             </div>
             
             <div class="form-group">
               <label class="form-label">现金偏离阈值</label>
-              <el-input v-model="thresholds.cash" placeholder="输入百分比">
+              <el-input 
+                v-model="rebalance.cashDeviation" 
+                placeholder="输入百分比"
+                type="number"
+                min="0"
+                max="100"
+              >
                 <template #append>%</template>
               </el-input>
             </div>
@@ -235,76 +268,7 @@
               </el-button>
             </div>
           </div>
-          
-          <!-- 模拟设置 -->
-          <div class="simulation-section">
-            <h3 class="sub-section-title">
-              <el-icon><Cpu /></el-icon> 策略模拟
-            </h3>
-            
-            <div class="form-group">
-              <label class="form-label">模拟起始时间</label>
-              <el-date-picker
-                v-model="simulationStartDate"
-                type="date"
-                placeholder="选择日期"
-                class="form-control"
-              ></el-date-picker>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">模拟资金</label>
-              <el-input v-model="simulationCapital" placeholder="输入金额">
-                <template #prepend>¥</template>
-              </el-input>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">模拟速度</label>
-              <el-slider 
-                v-model="simulationSpeed" 
-                :min="1" 
-                :max="5" 
-                :step="1"
-                show-stops
-              ></el-slider>
-              <div class="speed-indicator">
-                <span>速度: {{ simulationSpeedText }}</span>
-              </div>
-            </div>
-            
-            <div class="simulation-controls">
-              <el-button 
-                type="primary" 
-                @click="startSimulation" 
-                :disabled="isSimulating"
-                icon="VideoPlay"
-              >
-                开始模拟
-              </el-button>
-              <el-button 
-                @click="pauseSimulation" 
-                :disabled="!isSimulating"
-                icon="RefreshRight"
-              >
-                暂停
-              </el-button>
-              <el-button 
-                @click="stopSimulation" 
-                :disabled="!isSimulating"
-                icon="SwitchButton"
-              >
-                停止
-              </el-button>
-            </div>
-            
-            <div class="simulation-status" v-if="isSimulating">
-              <div class="status-indicator"></div>
-              <span>模拟运行中 - 速度: {{ simulationSpeedText }}</span>
-            </div>
-          </div>
         </div>
-        
         <!-- 回测结果 -->
         <div class="backtest-results">
           <h3 class="sub-section-title">
@@ -314,175 +278,255 @@
           <div class="results-container">
             <div class="result-card">
               <div class="result-title">累计收益</div>
-              <div class="result-value positive">+28.6%</div>
-              <div class="result-subtext">年化收益: 15.2%</div>
+              <div class="result-value positive">+{{ backtestResults.cumulativeReturn }}%</div>
             </div>
             
             <div class="result-card">
               <div class="result-title">最大回撤</div>
-              <div class="result-value negative">-12.4%</div>
-              <div class="result-subtext">发生在2023-03-15</div>
+              <div class="result-value negative">-{{ backtestResults.maxDrawdown }}%</div>
             </div>
             
             <div class="result-card">
               <div class="result-title">夏普比率</div>
-              <div class="result-value">1.85</div>
-              <div class="result-subtext">高于行业平均1.2</div>
+              <div class="result-value">{{ backtestResults.sharpeRatio }}</div>
             </div>
             
             <div class="result-card">
               <div class="result-title">交易次数</div>
-              <div class="result-value">248</div>
-              <div class="result-subtext">平均持仓时间: 7.2天</div>
+              <div class="result-value">{{ backtestResults.trades }}</div>
             </div>
           </div>
         </div>
       </section>
-      
-      <!-- 操作按钮 -->
-      <div class="action-buttons">
-        <el-button @click="resetAll" icon="Refresh">
-          重置所有设置
-        </el-button>
-        <el-button type="primary" @click="saveConfig" icon="Download">
-          保存配置
-        </el-button>
-      </div>
     </el-main>
   </div>
 </template>
 
-<script>
-import { Check, DataAnalysis, SetUp, TrendCharts, Histogram, 
-        Cpu, Promotion, Refresh, Timer, View, VideoPlay, 
-        RefreshRight, SwitchButton, Download, DataLine } from '@element-plus/icons-vue'
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import axios from 'axios'
+import { 
+  Check, DataAnalysis, SetUp, TrendCharts, Histogram, 
+  Cpu, Promotion, Refresh, Timer, View, VideoPlay, 
+  RefreshRight, SwitchButton, Download, DataLine 
+} from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
-export default {
-  components: {
-    Check,
-    DataAnalysis,
-    SetUp,
-    TrendCharts,
-    Histogram,
-    Cpu,
-    Promotion,
-    Refresh,
-    Timer,
-    View,
-    VideoPlay,
-    RefreshRight,
-    SwitchButton,
-    Download
+// 策略选择
+const strategyId1 = ref(1)
+const strategies = ref([])
+const selectedStrategy = ref('')
+const loading = ref(false)
+const error = ref(null)
+
+// 策略相关数据
+const profits = ref('加载中...')
+const runtime = ref('加载中...')
+const riskLevel = ref('中')
+
+// 再平衡设置
+const rebalance = ref({
+  activeRebalancing: true, // 主动/被动调仓
+  triggerByThreshold: true, // 阈值触发标志
+  triggerByPeriodic: false, // 定期触发标志
+  frequency: 'monthly',    // 频率
+  executionTime: '09:30',   // 执行时间
+  maxAdjustmentRate: 20,    // 最大调仓比例
+  // 资产偏离阈值
+  stockDeviation: 5,
+  bondDeviation: 3,
+  commodityDeviation: 7,
+  cashDeviation: 2
+})
+const backtestResults = ref({
+  cumulativeReturn: 0.0,
+  maxDrawdown: 0.0,
+  sharpeRatio: 0.0,
+  trades: 0
+})
+// 回测设置
+const backtestDateRange = ref([new Date(2022, 0, 1), new Date(2023, 11, 31)])
+const initialCapital = ref('1000000')
+const transactionFee = ref('0.15')
+const slippage = ref('0.1')
+
+const rebalanceConditionType = computed({
+  get() {
+    if (rebalance.value.triggerByThreshold && rebalance.value.triggerByPeriodic) return 'both'
+    if (rebalance.value.triggerByThreshold) return 'threshold'
+    if (rebalance.value.triggerByPeriodic) return 'periodic'
+    return 'threshold' // 默认
   },
-  data() {
-    return {
-      // 策略选择
-      strategies: [
-        { id: 'strategy1', name: '量化多因子' },
-        { id: 'strategy2', name: '趋势跟踪' },
-        { id: 'strategy3', name: '均值回归' },
-        { id: 'strategy4', name: '套利策略' },
-        { id: 'strategy5', name: '动量策略' },
-        { id: 'strategy6', name: '价值投资' },
-      ],
-      selectedStrategy: 'strategy1',
-      
-      // 再平衡设置
-      rebalanceType: 'active',
-      rebalanceCondition: 'threshold',
-      rebalanceFrequency: 'monthly',
-      rebalanceTime: '14:30',
-      maxAdjustment: 20,
-      thresholds: {
-        stock: 5,
-        bond: 3,
-        commodity: 7,
-        cash: 2
-      },
-      
-      // 回测设置
-      backtestDateRange: [new Date(2022, 0, 1), new Date(2023, 11, 31)],
-      initialCapital: '1000000',
-      transactionFee: '0.15',
-      slippage: '0.1',
-      
-      // 模拟设置
-      simulationStartDate: new Date(),
-      simulationCapital: '500000',
-      simulationSpeed: 3,
-      isSimulating: false
-    };
-  },
-  computed: {
-    simulationSpeedText() {
-      const speeds = ['极慢', '慢速', '中速', '快速', '极快'];
-      return speeds[this.simulationSpeed - 1];
+  set(value) {
+    rebalance.value.triggerByThreshold = (value === 'threshold' || value === 'both')
+    rebalance.value.triggerByPeriodic = (value === 'periodic' || value === 'both')
+  }
+})
+
+// 方法定义
+const runBacktest = () => {
+  ElMessage({
+    message: '回测执行中，请稍候...',
+    type: 'info',
+    duration: 2000
+  })
+  
+  setTimeout(() => {
+    // 模拟回测结果
+    backtestResults.value = {
+      cumulativeReturn: 28.6,
+      maxDrawdown: 12.4,
+      sharpeRatio: 1.85,
+      trades: 248
     }
-  },
-  methods: {
-    runBacktest() {
-      this.$message({
-        message: '回测执行中，请稍候...',
-        type: 'info',
-        duration: 2000
-      });
-      
-      // 模拟回测执行
-      setTimeout(() => {
-        this.$message({
-          message: '回测完成！',
-          type: 'success'
-        });
-      }, 3000);
-    },
-    resetBacktest() {
-      this.backtestDateRange = [new Date(2022, 0, 1), new Date(2023, 11, 31)];
-      this.initialCapital = '1000000';
-      this.transactionFee = '0.15';
-      this.slippage = '0.1';
-      this.$message.info('回测参数已重置');
-    },
-    startSimulation() {
-      this.isSimulating = true;
-      this.$message.success('策略模拟已开始');
-    },
-    pauseSimulation() {
-      this.$message.warning('策略模拟已暂停');
-    },
-    stopSimulation() {
-      this.isSimulating = false;
-      this.$message.info('策略模拟已停止');
-    },
-    saveConfig() {
-      this.$message({
+    
+    ElMessage({
+      message: '回测完成！',
+      type: 'success'
+    })
+  }, 3000)
+}
+
+// 修复：将 watch 中的 loadStrategyDetails 改为 handleStrategyChange
+watch(selectedStrategy, (newStrategyId) => {
+  if (newStrategyId) {
+    handleStrategyChange(newStrategyId)
+  }
+})
+
+// 加载策略列表
+async function loadStrategyList() {
+  loading.value = true
+  error.value = null
+  try {
+    const response = await axios.post('/api/strategy-management', {
+      id : 1,
+      name: 'fu4geliu'
+    }, {
+      headers: { 'Content-Type': 'application/json' }
+    })
+    
+    strategies.value = response.data.map(item => ({
+      id: item.id,
+      name: item.name
+    }))
+    
+    // 如果有策略数据，自动选择第一个并加载详情
+    if (strategies.value.length > 0) {
+      selectedStrategy.value = strategies.value[0].id
+    }
+  } catch (err) {
+    console.error('加载策略列表失败:', err)
+    error.value = '无法加载策略列表: ' + (err.response?.data?.message || err.message)
+    ElMessage.error(error.value)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 加载选定策略的详情
+const handleStrategyChange = async (strategyId) => {
+  if (!strategyId) return
+  strategyId1.value = strategyId
+  try {
+    loading.value = true
+    
+    // 同时调用策略详情和再平衡设置两个API
+    const [strategyResponse, rebalanceResponse] = await Promise.all([
+      axios.post('/api/strategy-monitoring/Metrics', {
+        id: strategyId,
+        name: 'fu4geliu'
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      }),
+      axios.post('/api/strategy-rebalance/Detail', {
+        id: strategyId,
+        name: 'fu4geliu'
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    ])
+    
+    // 处理策略详情响应
+    const strategyData = strategyResponse.data
+    profits.value = (strategyData.yearToDatePercentage > 0 ? '+' : '') + 
+                    strategyData.yearToDatePercentage.toFixed(1) + '%'
+    runtime.value = strategyData.uptimeDays + '天'
+    // 直接使用后端返回的风险等级，不做转换
+    riskLevel.value = strategyData.riskLevel || '中'
+    
+    // 处理再平衡设置响应
+    const rebalanceData = rebalanceResponse.data
+    rebalance.value = {
+      activeRebalancing: rebalanceData.activeRebalancing,
+      triggerByThreshold: rebalanceData.triggerByThreshold,
+      triggerByPeriodic: rebalanceData.triggerByPeriodic,
+      frequency: rebalanceData.frequency || 'monthly',
+      executionTime: rebalanceData.executionTime?.length === 5 ? 
+          rebalanceData.executionTime : 
+          rebalanceData.executionTime?.substring(0, 5) || '09:30',
+      maxAdjustmentRate: rebalanceData.maxAdjustmentRate || 20,
+      stockDeviation: rebalanceData.stockDeviation || 5,
+      bondDeviation: rebalanceData.bondDeviation || 3,
+      commodityDeviation: rebalanceData.commodityDeviation || 7,
+      cashDeviation: rebalanceData.cashDeviation || 2
+    }
+    
+  } catch (err) {
+    console.error('加载策略详情失败:', err)
+    ElMessage.error('加载策略配置失败: ' + (err.response?.data?.message || err.message))
+  } finally {
+    loading.value = false
+  }
+}
+
+const saveConfig = async () => {
+  try {
+    // 构造请求数据
+    const requestData = {
+      id: 1,
+      activeRebalancing: rebalance.value.activeRebalancing,
+      triggerByThreshold: rebalance.value.triggerByThreshold,
+      triggerByPeriodic: rebalance.value.triggerByPeriodic,
+      frequency: rebalance.value.frequency,
+      executionTime: rebalance.value.executionTime,
+      maxAdjustmentRate: rebalance.value.maxAdjustmentRate,
+      stockDeviation: rebalance.value.stockDeviation,
+      bondDeviation: rebalance.value.bondDeviation,
+      commodityDeviation: rebalance.value.commodityDeviation,
+      cashDeviation: rebalance.value.cashDeviation,
+      strategyId:strategyId1.value
+    };
+    
+    // 发送POST请求到后端
+    const response = await axios.post('/api/strategy-rebalance/Update', requestData, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    // 检查响应数据
+    if (response.data === 1) {
+      ElMessage({
         message: '配置已保存成功！',
         type: 'success'
       });
-    },
-    resetAll() {
-      this.selectedStrategy = 'strategy1';
-      this.rebalanceType = 'active';
-      this.rebalanceCondition = 'threshold';
-      this.rebalanceFrequency = 'monthly';
-      this.rebalanceTime = '14:30';
-      this.maxAdjustment = 20;
-      this.thresholds = {
-        stock: 5,
-        bond: 3,
-        commodity: 7,
-        cash: 2
-      };
-      this.resetBacktest();
-      this.simulationStartDate = new Date();
-      this.simulationCapital = '500000';
-      this.simulationSpeed = 3;
-      this.isSimulating = false;
-      
-      this.$message.info('所有设置已重置');
+    } else {
+      throw new Error('保存配置失败');
     }
+  } catch (error) {
+    console.error('保存配置时发生错误:', error);
+    ElMessage({
+      message: '保存配置失败，请重试',
+      type: 'error'
+    });
   }
 };
+
+// 在组件挂载时加载策略列表
+onMounted(() => {
+  loadStrategyList()
+})
 </script>
+
 
 <style scoped>
 .config-container {
