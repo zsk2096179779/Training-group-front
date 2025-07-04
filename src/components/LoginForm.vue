@@ -16,7 +16,8 @@
 </template>
 
 <script>
-import { login, setAuthToken } from '../api/auth'
+import { login } from '../api/auth'
+import {setToken,setUserInfo} from "../utils/auth";
 
 export default {
   name: 'LoginForm',
@@ -30,14 +31,14 @@ export default {
     async onSubmit() {
       this.loading = true
       try {
-        const resp = await login(this.form)
-        const token = resp.data.data.token
-        localStorage.setItem('jwt_token', token)
-        setAuthToken(token)
+        const {accessToken,user} = await login(this.form)
+        setToken(accessToken)
+        setUserInfo(user)
+
         alert('登录成功！')
         this.$emit('login-success')
       } catch (err) {
-        const msg = err.response?.data?.msg || err.message
+        const msg = err.response?.data?.msg || err.response?.data?.message || err.message
         alert('登录失败：' + msg)
       } finally {
         this.loading = false

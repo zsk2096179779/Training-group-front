@@ -146,9 +146,8 @@
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
-import { getFactorTree, getFactorsByNodeId, updateNodeOrder, getFactorTreeScenes } from '@/api/factor'
-import { isAdmin } from '@/utils/auth' // 导入 isAdmin
-import request from '@/api/request' // 导入request实例
+import { getFactorTree, getFactorsByNodeId, updateNodeOrder, getFactorTreeScenes } from '../../api/factor'
+import { isAdmin } from '../../utils/auth' // 导入 isAdmin
 import { saveAs } from 'file-saver'
 // ECharts集成
 import { use } from 'echarts/core'
@@ -156,6 +155,7 @@ import VChart from 'vue-echarts'
 import { LineChart } from 'echarts/charts'
 import { TitleComponent, TooltipComponent, LegendComponent, GridComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
+import client from "../../api/client";
 use([LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer])
 
 // 业务场景选项由接口动态获取
@@ -267,7 +267,7 @@ async function loadNodeFactorHistory(nodeId) {
   chartLoading.value = true
   chartOption.value = null
   try {
-    const res = await request.get('/api/factors/history', { params: { nodeId } })
+    const res = await client.get('/api/factors/history', { params: { nodeId } })
     let data = res.data || []
     if (!Array.isArray(data)) {
       data = [data]
@@ -362,7 +362,7 @@ const handleExport = async (command) => {
     try {
       console.log(`[Debug] 请求导出Excel for treeType: ${treeType}`)
       // 后端直接生成Excel，我们请求blob数据
-      const blob = await request.get('/api/factor-tree/export', {
+      const blob = await client().get('/api/factor-tree/export', {
         params: { treeType },
         responseType: 'blob',
       });
@@ -391,7 +391,7 @@ const handleFileUpload = async (option) => {
   const formData = new FormData()
   formData.append('file', option.file)
   try {
-    await request.post('/api/factor-tree/import', formData, {
+    await client().post('/api/factor-tree/import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     ElMessage.success('导入成功')
@@ -411,7 +411,7 @@ const confirmRenameTree = async () => {
     formData.append('treeType', currentTreeType.value);
     formData.append('treeName', currentTreeGroup.value?.treeName || '');
     formData.append('newTreeName', renameValue.value.trim());
-    await request.post('/api/factor-tree/rename', formData);
+    await client().post('/api/factor-tree/rename', formData);
     ElMessage.success('重命名成功')
     showRenameDialog.value = false
     // 刷新树类型和树结构
@@ -431,7 +431,7 @@ const handleDeleteTree = () => {
       const formData = new FormData();
       formData.append('treeType', currentTreeType.value);
       formData.append('treeName', currentTreeGroup.value?.treeName || '');
-      await request.post('/api/factor-tree/delete', formData);
+      await client().post('/api/factor-tree/delete', formData);
       ElMessage.success('删除成功')
       await fetchTreeTypes()
       currentTreeType.value = ''
@@ -466,7 +466,7 @@ async function loadFactorHistoryById(factorId) {
   chartLoading.value = true
   chartOption.value = null
   try {
-    const res = await request.get('/api/factors/history', { params: { nodeId: currentNode.value.id, factorId } })
+    const res = await client().get('/api/factors/history', { params: { nodeId: currentNode.value.id, factorId } })
     let data = res.data || []
     if (!Array.isArray(data)) {
       data = [data]

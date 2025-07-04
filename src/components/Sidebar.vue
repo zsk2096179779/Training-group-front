@@ -63,9 +63,32 @@ export default {
       return localStorage.getItem('user_role') || 'USER'
     },
     filteredMenu() {
-      return menuConfig.filter(item =>
-          item.roles.includes(this.userRole)
+      const role = this.userRole
+      return menuConfig
+          .filter(item =>
+              Array.isArray(item.roles) && item.roles.includes(role)
       )
+          // 2. 对每个留下的菜单，处理它的 children
+          .map(item => {
+            // 如果它原本有 children，就再过滤子项
+            let children = []
+            if (Array.isArray(item.children)) {
+              children = item.children.filter(sub =>
+                  Array.isArray(sub.roles) && sub.roles.includes(role)
+              )
+            }
+            // 如果原本定义了 children 且过滤后没有任何子项，就不展示这个父菜单
+            if (Array.isArray(item.children) && children.length === 0) {
+              return null
+            }
+            // 否则把过滤后的 children (可能是 [] 或有效数组) 赋回去
+            return {
+              ...item,
+              children
+            }
+          })
+          // 3. 去掉上一步 map 里返回 null 的
+          .filter(item => item !== null)
     }
   },
   methods: {

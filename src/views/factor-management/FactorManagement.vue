@@ -201,9 +201,9 @@
 </template>
 
 <script>
-import { factorApi } from '../api/factor'
+import { factorApi } from '../../api/factor'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { isAdmin } from '@/utils/auth'
+import { isAdmin } from '../../utils/auth'
 
 export default {
   name: 'FactorManagement',

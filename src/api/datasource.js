@@ -1,21 +1,21 @@
-import request from './request'
+import client from './client'
 
 export function getDataSourceConfigs() {
-  return request({ url: '/api/datasource/list', method: 'get' })
+  return client({ url: '/api/datasource/list', method: 'get' })
 }
 export function createDataSourceConfig(data) {
-  return request({ url: '/api/datasource/create', method: 'post', data })
+  return client({ url: '/api/datasource/create', method: 'post', data })
 }
 export function updateDataSourceConfig(data) {
-  return request({ url: '/api/datasource/update', method: 'post', data })
+  return client({ url: '/api/datasource/update', method: 'post', data })
 }
 export function deleteDataSourceConfig(id) {
-  return request({ url: `/api/datasource/delete/${id}`, method: 'post' })
+  return client({ url: `/api/datasource/delete/${id}`, method: 'post' })
 }
 export function importDataSource(id) {
-  return request.post(`/api/datasources/import/${id}`);
+  return client.post(`/api/datasource/import/${id}`);
 }
 
 export function runPythonScript(data) {
-  return request.post('/api/datasources/run-script', data);
+  return client.post('/api/datasource/run-script', data);
 } 

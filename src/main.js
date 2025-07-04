@@ -19,9 +19,9 @@ import * as echarts from 'echarts'
 import './styles/global.css'
 import './styles/animation.css'
 import './styles/login.css'
-import { setAuthToken } from './api/auth'
+import { setToken } from './utils/auth'
 const saved = localStorage.getItem('jwt_token')
-if (saved) setAuthToken(saved)
+if (saved) setToken(saved)
 
 const app = createApp(App)
 

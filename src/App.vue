@@ -14,7 +14,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { isAuthenticated } from '@/utils/auth'
+import { isAuthenticated } from './utils/auth'
 import HeaderBar from './components/Header.vue'
 import Sidebar  from './components/Sidebar.vue'
 

@@ -1,5 +1,6 @@
 // src/api/client.js
 import axios from 'axios'
+import {getToken} from "../utils/auth";
 
 const client = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
@@ -9,16 +10,13 @@ const client = axios.create({
 
 client.interceptors.request.use(config => {
     // 1) 注入最新的 JWT（假设你把它存在 localStorage）
-    const token = localStorage.getItem('jwt_token')
+    const token = getToken()
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`
+       config.headers.Authorization = `Bearer ${token}`
     }
-
-    // 2) 打印调试信息
-    console.log('[→ Request]', config.method.toUpperCase(), config.baseURL + config.url)
-    console.log('  Headers:', config.headers)
-    console.log('  Params/Data:', config.params || config.data)
-
+    console.log(`[→ Request] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`)
+    console.log('Headers:', config.headers)
+    console.log('Params/Data:', config.params || config.data)
     return config
 })
 

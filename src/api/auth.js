@@ -1,10 +1,11 @@
 // src/api/auth.js
 import client from './client'
+import axios from 'axios'
 
 /**
  * 注册
  * @param {Object} payload - { username, email, password }
- * @returns {Promise}
+ * @returns {Promise<AxiosResponse<any>>}
  */
 export function register(payload) {
     return client.post('/auth/register', payload)
@@ -12,34 +13,30 @@ export function register(payload) {
 
 /**
  * 登录
- * @param {Object} payload - { email, password }
- * @returns {Promise<AxiosResponse<{ token, user }>>}
+ * @param {Object} payload - { username, password }
+ * @returns {Promise<axios.AxiosResponse<any>>}
  */
 export function login(payload) {
-    return client.post('/auth/login', payload)
+    return client
+        .post('/auth/login', payload)
+        .then(res => res.data)
 }
 
 /**
  * 获取当前用户信息
- * @returns {Promise<AxiosResponse<UserInfo>>}
+ * @returns {Promise<UserInfo>}
  */
 export function getUserInfo() {
-    return client.get('/auth/user')
+    return client
+        .get('/auth/user')
+        .then(res => res.data)
 }
 
 /**
  * 登出
- * @returns {Promise}
+ * @returns {Promise<AxiosResponse<any>>}
  */
 export function logout() {
     return client.post('/auth/logout')
 }
 
-/**
- * 手动设置 JWT 到请求头
- * （如果你在 login 拿到 token 之后需要立即生效）
- * @param {string} token
- */
-export function setAuthToken(token) {
-    client.defaults.headers.common['Authorization'] = `Bearer ${token}`
-}

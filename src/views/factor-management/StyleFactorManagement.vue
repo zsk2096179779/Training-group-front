@@ -97,10 +97,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
-import { factorApi } from '@/api/factor'
-import { isAdmin } from '@/utils/auth'
+import {computed, onMounted, ref} from 'vue'
+import {ElMessage} from 'element-plus'
+import {factorApi} from '../../api/factor'
+import {isAdmin} from '../../utils/auth'
 
 const step = ref(0)
 const factorList = ref([]) // 所有基础因子
@@ -130,8 +130,7 @@ const isAdminUser = computed(() => isAdmin())
 function loadStyleFactorList() {
   listLoading.value = true
   setTimeout(() => {
-    const data = JSON.parse(localStorage.getItem('styleFactorList') || '[]')
-    styleFactorList.value = data
+    styleFactorList.value = JSON.parse(localStorage.getItem('styleFactorList') || '[]')
     listLoading.value = false
   }, 300)
 }
