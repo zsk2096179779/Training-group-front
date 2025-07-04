@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Auth       from '../components/Auth.vue'
 import MainLayout from '../layouts/MainLayout.vue'
-import { isAuthenticated, isAdmin } from '../utils/auth'
+import { isAuthenticated, isAdmin } from '@/utils/auth'
 
 // fund-research 系列
 const FundList    = () => import('../views/fund-research/List.vue')
@@ -22,6 +22,10 @@ const PortfolioMgmt = () => import('../views/portfolio-management/index.vue')
 const TradeMgmt     = () => import('../views/trade-management/index.vue')
 const AdminPanel    = () => import('../views/admin-management/index.vue')
 const NotFound      = () => import('../views/NotFound.vue')
+import ComboList from '@/views/ComboList.vue'
+import Test from "@/views/Test.vue";
+import DIYComboList from "@/views/DIYComboList.vue";
+import ComboCreate from "@/views/ComboCreate.vue";
 
 const routes = [
     // 登录 / 注册
@@ -58,6 +62,29 @@ const routes = [
                     { path: 'style',           name: 'StyleFactorManagement',   component: StyleFactorManagement },
                     { path: 'datasource',      name: 'DataSourceConfig',        component: DataSourceConfig },
                 ]
+            },
+
+            {
+                path: '/',
+                name: 'Home',
+                component: ComboList
+            },
+            {
+                path: '/combos',
+                name: 'ComboList',
+                component: ComboList
+            },
+
+            {
+                path: '/create',
+                name: 'ComboCreate',
+                component: ComboCreate
+            },
+
+            {
+                path: '/mycombos',
+                name: 'DIYComboList',
+                component: DIYComboList
             },
 
             // 其它模块
