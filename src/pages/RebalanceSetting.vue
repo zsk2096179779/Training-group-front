@@ -278,7 +278,7 @@
           <div class="results-container">
             <div class="result-card">
               <div class="result-title">累计收益</div>
-              <div class="result-value positive">+{{ backtestResults.cumulativeReturn }}%</div>
+              <div class="result-value positive">{{ backtestResults.cumulativeReturn }}%</div>
             </div>
             
             <div class="result-card">
@@ -364,28 +364,68 @@ const rebalanceConditionType = computed({
 })
 
 // 方法定义
-const runBacktest = () => {
+const runBacktest = async () => {
   ElMessage({
     message: '回测执行中，请稍候...',
     type: 'info',
     duration: 2000
-  })
+  });
   
-  setTimeout(() => {
-    // 模拟回测结果
+  try {
+    // 构造请求数据
+    const requestData = {
+      startDate: backtestDateRange.value[0].toISOString().split('T')[0],
+      endDate: backtestDateRange.value[1].toISOString().split('T')[0],
+      initialCapital: parseInt(initialCapital.value),
+      transactionFee: parseFloat(transactionFee.value),
+      slippage: parseFloat(slippage.value)
+    };
+    
+    // 发送POST请求到后端回测接口
+    const response = await axios.post('/api/strategy-rebalance/HuiCe', requestData, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    // 处理响应数据并格式化数值
+    const result = response.data;
+
+    // 格式化数值，保留两位小数，去掉正号
+    const formatValue = (value, isPercentage = false) => {
+      if (value === null || value === undefined) return '0.00';
+      let num = parseFloat(value);
+      if (isNaN(num)) return '0.00';
+      
+      // 保留两位小数
+      let formatted = num.toFixed(2);
+      
+      // 如果是百分比且数值为负数，去掉正号
+      if (isPercentage && num < 0) {
+        formatted = '-' + Math.abs(num).toFixed(2);
+      }
+      
+      return formatted;
+    };
+
+    // 更新回测结果
     backtestResults.value = {
-      cumulativeReturn: 28.6,
-      maxDrawdown: 12.4,
-      sharpeRatio: 1.85,
-      trades: 248
-    }
+      cumulativeReturn: formatValue(result.cumulativeReturn, true),
+      maxDrawdown: formatValue(result.maxDrawdown, true),
+      sharpeRatio: formatValue(result.sharpeRatio),
+      trades: result.trades || 0
+    };
     
     ElMessage({
       message: '回测完成！',
       type: 'success'
-    })
-  }, 3000)
-}
+    });
+  } catch (error) {
+    console.error('执行回测时发生错误:', error);
+    ElMessage({
+      message: '回测失败，请重试',
+      type: 'error'
+    });
+  }
+};
 
 // 修复：将 watch 中的 loadStrategyDetails 改为 handleStrategyChange
 watch(selectedStrategy, (newStrategyId) => {
@@ -423,6 +463,28 @@ async function loadStrategyList() {
     loading.value = false
   }
 }
+const resetBacktest = () => {
+  // 重置回测时间范围为默认值
+  backtestDateRange.value = [new Date(2022, 0, 1), new Date(2023, 11, 31)];
+  
+  // 重置资金和费用参数为默认值
+  initialCapital.value = '1000000';
+  transactionFee.value = '0.15';
+  slippage.value = '0.1';
+  
+  // 重置回测结果为初始状态
+  backtestResults.value = {
+    cumulativeReturn: '0.00',
+    maxDrawdown: '0.00',
+    sharpeRatio: '0.00',
+    trades: 0
+  };
+  
+  ElMessage({
+    message: '参数已重置为默认值',
+    type: 'success'
+  });
+};
 
 // 加载选定策略的详情
 const handleStrategyChange = async (strategyId) => {
