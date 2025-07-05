@@ -16,16 +16,20 @@ const FactorTreeManagement = () => import('../views/factor-management/FactorTree
 const StyleFactorManagement= () => import('../views/factor-management/StyleFactorManagement.vue')
 const DataSourceConfig = () => import('../views/factor-management/DataSourceConfig.vue')
 
+
+//组合调仓分页组件
+const PortfolioLayout = () => import('../components/PortfolioLayout.vue')
+const ComboList = () => import('../views/portfolio-management/ComboList.vue')
+const ComboCreate = () => import('../views/portfolio-management/ComboCreate.vue')
+const DIYComboList = () => import('../views/portfolio-management/DiyComboList.vue')
+
 // 其它模块空白页
 const StrategyMgmt  = () => import('../views/strategy-management/index.vue')
-const PortfolioMgmt = () => import('../views/portfolio-management/index.vue')
+
 const TradeMgmt     = () => import('../views/trade-management/index.vue')
 const AdminPanel    = () => import('../views/admin-management/index.vue')
 const NotFound      = () => import('../views/NotFound.vue')
-import ComboList from '@/views/ComboList.vue'
-import Test from "@/views/Test.vue";
-import DIYComboList from "@/views/DIYComboList.vue";
-import ComboCreate from "@/views/ComboCreate.vue";
+
 
 const routes = [
     // 登录 / 注册
@@ -65,31 +69,36 @@ const routes = [
             },
 
             {
-                path: '/',
-                name: 'Home',
-                component: ComboList
-            },
-            {
-                path: '/combos',
-                name: 'ComboList',
-                component: ComboList
+                path: 'portfolio-management',
+                component:PortfolioLayout,
+                meta: { requiresAuth: true },
+                children: [
+                    {
+                        path: 'list',
+                        name: 'ComboList',
+                        component: ComboList,
+                        meta: {  title: '组合列表' }
+                    },
+
+                    {
+                        path: 'create',
+                        name: 'ComboCreate',
+                        component: ComboCreate,
+                        meta: {  title: '创建组合'}
+                    },
+
+                    {
+                        path: 'diy',
+                        name: 'DIYComboList',
+                        component: DIYComboList,
+                        meta: { title: '我的组合'}
+                    },
+                ]
             },
 
-            {
-                path: '/create',
-                name: 'ComboCreate',
-                component: ComboCreate
-            },
-
-            {
-                path: '/mycombos',
-                name: 'DIYComboList',
-                component: DIYComboList
-            },
 
             // 其它模块
             { path: 'strategy-management',   name: 'StrategyManagement',   component: StrategyMgmt,  meta: { requiresAuth: true } },
-            { path: 'portfolio-management',  name: 'PortfolioManagement',  component: PortfolioMgmt, meta: { requiresAuth: true } },
             { path: 'trade-management',      name: 'TradeManagement',      component: TradeMgmt,     meta: { requiresAuth: true } },
             { path: 'admin',                 name: 'Admin',                component: AdminPanel,    meta: { requiresAuth: true, requiresAdmin: true } }
         ]

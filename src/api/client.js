@@ -1,6 +1,6 @@
 // src/api/client.js
 import axios from 'axios'
-import {getToken} from "../utils/auth";
+import {getToken} from "@/utils/auth";
 
 const client = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',

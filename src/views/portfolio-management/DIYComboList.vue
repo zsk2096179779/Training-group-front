@@ -22,7 +22,7 @@
 
         <el-button
             type="primary"
-            @click="$router.push('/create')"
+            @click="goToCreate"
             class="btn"
         >
           创建组合
@@ -121,11 +121,15 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import {getCombos, getFundId, getFunds} from "@/api/index.js";
-import axios from "axios";
+import {getCombos, getFundId, getFunds} from "@/api/portfolios.js";
 import {ElMessage} from "element-plus";
 
 export default {
+  methods: {
+    goToCreate() {
+      this.$router.push({ name:'ComboCreate' })
+    }
+  },
   setup() {
 
     const combosList = ref([])
@@ -135,7 +139,7 @@ export default {
       try {
         const response = await getCombos();
 
-        combosList.value = response.data.filter(combo => combo.isUserCreated == 1)
+        combosList.value = response.filter(combo => combo.userCreated === true)
 
       } catch (error) {
         console.error('获取数据失败:', error);
@@ -171,7 +175,12 @@ export default {
       // 搜索逻辑已通过computed属性实现
     }
     const convertRiskLevel = (riskLevel) => {
-      return parseInt(riskLevel.replace('R', ''))
+      // 如果没有风险等级，就直接返回 0（或你想展示的默认星数）
+      if (!riskLevel || typeof riskLevel !== 'string') {
+        return 0
+      }
+      // 正常把 "R3" → 3
+      return parseInt(riskLevel.replace(/^R/, ''), 10) || 0
     }
 
     // 创建组合按钮（未实现功能）

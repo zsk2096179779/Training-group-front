@@ -48,9 +48,9 @@
           >
             <el-option
                 v-for="fund in fundList"
-                :key="fund.fundCode"
-                :label="`${fund.fundName}（${fund.fundCode}）`"
-                :value="fund.fundCode"
+                :key="fund.code"
+                :label="`${fund.name}（${fund.code}）`"
+                :value="fund.code"
             />
           </el-select>
         </el-form-item>
@@ -67,7 +67,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAllFunds, createCombo } from '@/api/index.js'
+import { getAllFunds, createCombo } from '@/api/portfolios.js'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
@@ -82,7 +82,7 @@ const form = ref({
   maxDrawdown: 0,
   minimumInvestment: 1000,
   funds: [],
-  isUserCreated: '1'
+  userCreated: true
 })
 
 const rules = {
@@ -97,8 +97,9 @@ const fundList = ref([])
 
 const loadFunds = async () => {
   try {
-    const res = await getAllFunds()
-    fundList.value = res.data || res
+    fundList.value = await getAllFunds()
+
+    console.log('fundList.raw =', fundList.value)
   } catch (e) {
     console.error('加载基金失败', e)
     ElMessage.error('基金列表加载失败')
@@ -119,7 +120,7 @@ const submitForm = () => {
     try {
       await createCombo(payload)
       ElMessage.success('创建成功')
-      router.push('/') // 返回首页或列表页
+      await router.push('/portfolio-management/diy') // 返回首页或列表页
     } catch (e) {
       console.error('提交失败', e)
       ElMessage.error('提交失败')

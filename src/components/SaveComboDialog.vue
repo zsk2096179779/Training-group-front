@@ -35,20 +35,20 @@ import { reactive, computed } from 'vue'
 
 // 接收 v-model 绑定的值
 const props = defineProps({
-  modelValue: {
+  visible: {
     type: Boolean,
     required: true
   }
 })
-const emit = defineEmits(['update:modelValue', 'confirm'])
+const emit = defineEmits(['update:visible', 'confirm'])
 
-// v-model 双向绑定给 <el-dialog>
+// 把它跟 props.visible 绑在一起
 const dialogVisible = computed({
   get() {
-    return props.modelValue
+    return props.visible
   },
   set(val) {
-    emit('update:modelValue', val)
+    emit('update:visible', val)
   }
 })
 
@@ -59,7 +59,7 @@ const form = reactive({
 
 function onCancel() {
   // 关闭弹窗并重置
-  emit('update:modelValue', false)
+  emit('update:visible', false)
   form.name = ''
 }
 
@@ -69,7 +69,7 @@ function onConfirm() {
   // 通知外层“确定”事件，传组合名称
   emit('confirm', n)
   // 关闭弹窗并重置
-  emit('update:modelValue', false)
+  emit('update:visible', false)
   form.name = ''
 }
 </script>

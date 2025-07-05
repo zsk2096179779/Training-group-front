@@ -16,7 +16,11 @@ export default [
         ]
     },
     { path: '/strategy-management', title: '策略管理',       icon: '🧩', roles: ['USER','ADMIN'] },
-    { path: '/portfolio-management',  title: '组合产品管理',   icon: '🛍️', roles: ['USER','ADMIN'] },
+    { path: '/portfolio-management',  title: '组合产品管理',   icon: '🛍️', roles: ['USER','ADMIN'] ,
+        children: [
+            {title:"组合列表", path: '/portfolio-management/list',  roles: ['USER','ADMIN'] },
+        ]
+    },
     { path: '/trade-management',    title: '交易管理',       icon: '💱', roles: ['USER','ADMIN'] },
     { path: '/admin',    title: '后台管理',       icon: '🔧', roles: ['ADMIN']     },
 ]

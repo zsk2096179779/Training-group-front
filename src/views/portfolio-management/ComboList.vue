@@ -22,7 +22,7 @@
 
         <el-button
             type="primary"
-            @click="$router.push('/mycombos')"
+            @click="goToDIY"
             class="btn"
         >
           自建组合
@@ -107,9 +107,9 @@
 
       <h4 style="margin-top: 20px">关联基金</h4>
       <el-table :data="currentFund.funds" border style="width: 100%">
-        <el-table-column prop="fundCode" label="基金代码" width="120" />
-        <el-table-column prop="fundName" label="基金名称" />
-        <el-table-column prop="category" label="基金类型" width="120" />
+        <el-table-column prop="code" label="基金代码" width="120" />
+        <el-table-column prop="name" label="基金名称" />
+        <el-table-column prop="risk" label="基金风险" width="120" />
       </el-table>
 
       <template #footer>
@@ -120,12 +120,16 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
-import {getCombos, getFundId, getFunds} from "@/api/index.js";
-import axios from "axios";
+import {computed, onMounted, ref} from 'vue'
+import {getCombos, getFundId, getFunds} from "@/api/portfolios.js";
 import {ElMessage} from "element-plus";
 
 export default {
+  methods: {
+    goToDIY(){
+      this.$router.push({name:'DIYComboList'})
+    }
+  },
   setup() {
 
     const combosList = ref([])
@@ -133,12 +137,12 @@ export default {
     // 数据加载函数
     const loadCombos = async () => {
       try {
-        const response = await getCombos();
+        const arr = await getCombos();
         // combosList.value = response.data;
 
-        console.log('后端返回数据:', response.data)
+        console.log('后端返回数据:', arr.data)
 
-        combosList.value = response.data.filter(combo => combo.isUserCreated == 0)
+        combosList.value = arr.filter(combo => combo.userCreated===false)
 
       } catch (error) {
         console.error('获取数据失败:', error);
@@ -151,11 +155,9 @@ export default {
       try {
         currentFund.value = { ...row, funds: [] }
 
-        const fundIds = await getFundId(row.id)
+        const fundCodes = await getFundId(row.id)
 
-        const res = await getFunds(fundIds.data)
-
-        currentFund.value.funds = res.data || res
+        currentFund.value.funds = await getFunds(fundCodes)
 
         detailVisible.value = true
       } catch (error) {
@@ -174,7 +176,12 @@ export default {
       // 搜索逻辑已通过computed属性实现
     }
     const convertRiskLevel = (riskLevel) => {
-      return parseInt(riskLevel.replace('R', ''))
+      // 如果没有风险等级，就直接返回 0（或你想展示的默认星数）
+      if (!riskLevel || typeof riskLevel !== 'string') {
+        return 0
+      }
+      // 正常把 "R3" → 3
+      return parseInt(riskLevel.replace(/^R/, ''), 10) || 0
     }
 
     // 创建组合按钮（未实现功能）

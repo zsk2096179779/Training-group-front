@@ -24,29 +24,6 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-  // 开发服务器配置（解决跨域问题）
-  server: {
-    port: 5173, // Vue 开发服务器端口
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080', // 你的后端端口
-        changeOrigin: true,
-        secure: false,
-        // 添加调试信息
-        configure: (proxy, options) => {
-          proxy.on('error', (err, req, res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-          });
-        },
-      }
-    }
-  },
 
   // 生产环境构建配置
   build: {
