@@ -6,7 +6,7 @@
 import { createApp } from 'vue'
 import App           from './App.vue'
 import router        from './router'
-
+import { createPinia } from 'pinia'
 import ElementPlus   from 'element-plus'
 import 'element-plus/dist/index.css'
 import zhCn          from 'element-plus/es/locale/lang/zh-cn'
@@ -34,5 +34,5 @@ app.component('VChart', VChart)
 // 安装 vue-router 和 ElementPlus
 app.use(router)
 app.use(ElementPlus, { locale: zhCn })
-
+app.use(createPinia())
 app.mount('#app')

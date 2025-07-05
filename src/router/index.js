@@ -2,7 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Auth       from '../components/Auth.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 import { isAuthenticated, isAdmin } from '@/utils/auth'
-
+import StrategyManagement from '../pages/StrategyManagement.vue'
+import StrategyCreation from '../pages/StrategyCreation.vue'
+import StrategyMonitoring from '../pages/StrategyMonitoring.vue'
+import RebalanceSetting from '../pages/RebalanceSetting.vue'
+import StrategyDetail from '../pages/Detail.vue'
 // fund-research 系列
 const FundList    = () => import('../views/fund-research/List.vue')
 const FundCompany = () => import('../views/fund-research/Company.vue')
@@ -95,6 +99,20 @@ const routes = [
                     },
                 ]
             },
+    { path: '/', component: Index },
+    {
+        path: '/Leader',
+        component:Leader,
+        children: [
+            { path: '/strategy-management',name: 'StrategyManagement',component: StrategyManagement},
+            { path: '/strategy-creation',name: 'StrategyCreation',component: StrategyCreation},
+            { path: '/strategy-monitoring',name: 'StrategyMonitoring',component: StrategyMonitoring},
+            { path: '/rebalance-setting',name: 'RebalanceSetting',component: RebalanceSetting},
+            { path: '/strategy-management/Detail',name : 'StrategyDetail',component: StrategyDetail}
+        ]
+    },
+    { path: '/:pathMatch(.*)*', component: NotFound },
+]
 
 
             // 其它模块
