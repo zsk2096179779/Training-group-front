@@ -28,3 +28,4 @@ export function fetchHeatmap(strategyId) {
         .post('/strategy-monitoring/Heatmap', { id: strategyId })
         .then(r => r.data)
 }
+

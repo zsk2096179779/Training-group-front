@@ -403,9 +403,10 @@ import {
   Clock
 } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox,ElLoading} from 'element-plus';
-import axios from 'axios';
+import {createStrategy} from "@/api/strategy";
 
 const router = useRouter();
+
 
 // 策略选择状态
 const selectedStrategy = ref('');
@@ -506,6 +507,8 @@ const finishCreation = async () => {
     return;
   }
   try {
+    const username = localStorage.getItem('username')
+
     // 显示输入策略名称的对话框
     const { value: strategyName } = await ElMessageBox.prompt('请输入策略名称', '策略命名', {
       confirmButtonText: '确定',
@@ -517,7 +520,8 @@ const finishCreation = async () => {
     // 根据不同策略类型准备不同的数据
     const requestData = {
       id: 0,
-      name: strategyName
+      name: strategyName,
+      username :username,
     };
 
     // 添加特定策略的数据
@@ -554,11 +558,11 @@ const finishCreation = async () => {
     // 发送请求到后端
     const loading = ElLoading.service({ fullscreen: true, text: '正在创建策略...' });
     try {
-      const response = await axios.post('/api/strategy-management/new', requestData, {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const response = await createStrategy(requestData);
+      console.log('Response:',response);
+      console.log('responsedata',response.data);
       
-      if (response.data.success) {
+      if (response || response.data.success) {
         ElMessage.success(`策略 "${strategyName}" 创建成功！`);
         resetForms();
         selectedStrategy.value = '';

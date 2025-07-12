@@ -37,6 +37,7 @@ export default {
 
         alert('登录成功！')
         this.$emit('login-success')
+        localStorage.setItem('username',user.username)
       } catch (err) {
         const msg = err.response?.data?.msg || err.response?.data?.message || err.message
         alert('登录失败：' + msg)

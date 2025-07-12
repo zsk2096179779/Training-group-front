@@ -146,7 +146,7 @@ const totalItems = ref(0)       // 分页总数
 // 过滤 & 分页
 const searchQuery = ref('')
 const statusFilter = ref('all')
-const currentPage = ref(1)
+const currentPage = ref(0)
 const pageSize = ref(10)
 
 // 状态映射
@@ -180,41 +180,75 @@ const filteredStrategies = computed(() =>
 
 // 本地分页
 const pagedStrategies = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
+  const start = (currentPage.value ) * pageSize.value
   return filteredStrategies.value.slice(start, start + pageSize.value)
 })
 
-// 加载列表
+// async function loadStrategies() {
+//   loading.value = true;
+//   try {
+//     const resp = await fetchStrategies({
+//       page: currentPage.value,  // 当前页码，前端从 1 开始
+//       limit: pageSize.value,
+//       nameFilter: searchQuery.value,  // 过滤条件
+//       statusFilter: statusFilter.value  // 过滤条件
+//     });
+//
+//     console.log('响应数据:', resp);  // 打印响应，查看数据结构
+//
+//     if (resp?.data?.data && Array.isArray(resp.data.data.records)) {
+//       const list = resp.data.data.records;
+//       totalItems.value = resp.data.data.total || 0;  // 确保 total 被正确赋值
+//
+//       strategies.value = list.map(s => ({
+//         id: s.id,
+//         name: s.name,
+//         type: getTypeName(s.type),
+//         status: s.status.toLowerCase(),
+//         createdAt: formatDateTime(s.createTime),
+//         gain: s.gain
+//       }));
+//     } else {
+//       console.error('响应数据格式错误:', resp);
+//       ElMessage.error('加载策略失败：数据格式错误');
+//     }
+//   } catch (err) {
+//     console.error('加载策略失败:', err);
+//     ElMessage.error(
+//         '加载策略失败：' + (err.response?.data?.message || err.message)
+//     );
+//   } finally {
+//     loading.value = false;
+//   }
+// }
+// 拉取数据并更新
 async function loadStrategies() {
-  loading.value = true
+  loading.value = true;
   try {
-    const resp = await fetchStrategies({
-      page: currentPage.value,
-      limit: pageSize.value,
-      nameFilter: searchQuery.value,
-      statusFilter: statusFilter.value
-    })
-    // 后端返回 { success, records: [...], total: N }
-    const list = Array.isArray(resp.records) ? resp.records : []
-    totalItems.value = resp.total || 0
+    const resp = await fetchStrategies();
+    console.log('响应数据:', resp);  // 打印响应，查看数据结构
 
-    strategies.value = list.map(s => ({
+    const records = resp.data.records || [];
+    totalItems.value = resp.data?.data?.total || 0;
+
+    strategies.value = records.map(s => ({
       id: s.id,
       name: s.name,
       type: getTypeName(s.type),
       status: s.status.toLowerCase(),
       createdAt: formatDateTime(s.createTime),
       gain: s.gain
-    }))
+    }));
+
+    console.log('Strategies:', strategies.value);  // 打印 strategies 数据
   } catch (err) {
-    console.error('加载策略失败:', err)
-    ElMessage.error(
-        '加载策略失败：' + (err.response?.data?.message || err.message)
-    )
+    console.error('加载策略失败:', err);
+    ElMessage.error('加载策略失败：' + (err.response?.data?.message || err.message));
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
+
 
 // 跳转详情
 function viewDetail(row) {

@@ -76,9 +76,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { listOrders, executeOrder, rejectOrder,submitOrders } from '@/api/trades'
-import { ElMessage } from 'element-plus'
+import {onMounted, ref} from 'vue'
+import {executeOrder, rejectOrder, submitOrders} from '@/api/trades'
+import {ElMessage} from 'element-plus'
 
 // Tab 类型：open / rebal / error
 const tab = ref('open')
@@ -90,17 +90,28 @@ const page     = ref(1)
 const pageSize = ref(10)
 const loading  = ref(false)
 
+const mockOrders = [
+  { orderId: '001', account: '账户A', fund: '基金A', quantity: 100, status: 'PENDING' },
+  { orderId: '002', account: '账户B', fund: '基金B', quantity: 200, status: 'PENDING' },
+  { orderId: '003', account: '账户C', fund: '基金C', quantity: 300, status: 'COMPLETED' },
+  { orderId: '004', account: '账户D', fund: '基金D', quantity: 400, status: 'REJECTED' },
+  { orderId: '005', account: '账户E', fund: '基金E', quantity: 500, status: 'PENDING' },
+]
 // 拉列表
 async function fetchOrders() {
   loading.value = true
   try {
-    // 后端 listOrders 接口：{ items: [...], total }
-    const { items, total: t } = await listOrders({
-      page:  page.value,
-      size: pageSize.value
-    })
-    orders.value = items
-    total.value  = t
+    // // 后端 listOrders 接口：{ items: [...], total }
+    // const { items, total: t } = await listOrders({
+    //   page:  page.value,
+    //   size: pageSize.value
+    // })
+    // orders.value = items
+    // total.value  = t
+    const startIndex = (page.value - 1) * pageSize.value
+    const endIndex = startIndex + pageSize.value
+    orders.value = mockOrders.slice(startIndex, endIndex)
+    total.value  = mockOrders.length
   } catch (err) {
     ElMessage.error('加载交易单失败：' + (err.message || err))
   } finally {
@@ -130,7 +141,7 @@ async function onSubmitOrder(orderId) {
   const orderData = { /* 提交的订单数据 */ };
   try {
     // 调用submitOrders方法，传递需要提交的订单数据
-    await submitOrders(orderData);
+    // await submitOrders(orderData);
     ElMessage.success('订单提交成功');
     await fetchOrders(); // 提交成功后刷新订单列表
   } catch (err) {
@@ -139,7 +150,7 @@ async function onSubmitOrder(orderId) {
 }
 async function onReject(id) {
   try {
-    await rejectOrder(id)
+    // await rejectOrder(id)
     ElMessage.success('驳回成功')
     fetchOrders()
   } catch (err) {
@@ -152,7 +163,8 @@ async function batchSend() {
   if (!orders.value.length) return
   loading.value = true
   try {
-    await Promise.all( orders.value.map(o => executeOrder(o.orderId)) )
+    // await Promise.all( orders.value.map(o => executeOrder(o.orderId)) )
+    await Promise.all( orders.value.map(o => console.log('执行下单:', o.orderId)) )
     ElMessage.success('批量下单完成')
     await fetchOrders()
   } catch (err) {
@@ -165,9 +177,10 @@ async function batchReject() {
   if (!orders.value.length) return
   loading.value = true
   try {
-    await Promise.all( orders.value.map(o => rejectOrder(o.orderId)) )
+    // await Promise.all( orders.value.map(o => rejectOrder(o.orderId)) )
+    await Promise.all( orders.value.map(o => console.log('执行驳回:', o.orderId)) )
     ElMessage.success('批量驳回完成')
-    fetchOrders()
+    await fetchOrders()
   } catch (err) {
     ElMessage.error('批量驳回失败：' + (err.message || err))
   } finally {

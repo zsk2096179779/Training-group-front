@@ -32,7 +32,7 @@
         </el-button>
       </div>
     </el-header>
-    
+
     <!-- 主内容区域 -->
     <el-main class="monitor-content">
       <!-- 关键指标卡片区域 -->
@@ -50,7 +50,7 @@
             <div class="metric-subtext">已持续运行 {{ uptime }} 天</div>
           </div>
         </el-card>
-        
+
         <el-card class="metric-card">
           <div class="metric-title">
             <span>实时净值</span>
@@ -64,7 +64,7 @@
             </span>
           </div>
         </el-card>
-        
+
         <el-card class="metric-card">
           <div class="metric-title">
             <span>今日盈亏</span>
@@ -75,7 +75,7 @@
           </div>
           <div class="metric-subtext">年初至今: {{ formatCurrency(yearToDate) }} ({{ yearToDatePercentage }}%)</div>
         </el-card>
-        
+
         <el-card class="metric-card">
           <div class="metric-title">
             <span>持仓偏离度</span>
@@ -87,7 +87,7 @@
           </div>
         </el-card>
       </div>
-      
+
       <!-- 图表和预警区域 -->
       <div class="content-grid">
         <!-- 预警通知中心 -->
@@ -98,7 +98,7 @@
           </div>
           <div class="warning-container">
             <ul class="warning-list">
-              <li v-for="(warning, index) in warnings" :key="index" 
+              <li v-for="(warning, index) in warnings" :key="index"
                   class="warning-item" :class="'warning-level-' + warning.level">
                 <div class="warning-icon">
                   <i :class="getWarningIcon(warning.level)"></i>
@@ -117,7 +117,7 @@
           </div>
           <div class="timestamp">最后更新: {{ updateTime }}</div>
         </el-card>
-        
+
         <!-- 持仓偏离度热力图 -->
         <el-card class="chart-card">
           <div class="card-title">
@@ -148,7 +148,7 @@
             </div>
           </div>
         </el-card>
-        
+
         <!-- 策略收益曲线 -->
         <el-card class="chart-card">
           <div class="card-title">
@@ -157,7 +157,7 @@
           </div>
           <div class="chart-container" ref="profitChart"></div>
         </el-card>
-        
+
         <!-- 风险指标 -->
         <el-card class="chart-card">
           <div class="card-title">
@@ -180,7 +180,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {Refresh} from "@element-plus/icons-vue";
 import {fetchStrategies} from "@/api/strategy";
 import {
-   fetchWarnings, fetchProfitCurve, fetchHeatmap, fetchMetrics
+  fetchWarnings, fetchProfitCurve, fetchHeatmap, fetchMetrics
 } from "@/api/monitoring";
 
 const route = useRoute()
@@ -259,32 +259,58 @@ function formatCurrency(value) {
 }
 
 async function loadStrategyList() {
+  // loading.value = true;
+  // try {
+  //   // 拉取策略数据
+  //   const response = await fetchStrategies({
+  //     page: 1,
+  //     limit: 100,
+  //     name: '',
+  //     status: 'all'
+  //   });
+  //
+  //   // 检查数据是否有效
+  //   const records = response.data?.data?.records || [];  // 默认空数组
+  //
+  //   console.log('Fetched strategies:', records); // 输出查看数据结构
+  //
+  //   // 如果没有数据
+  //   if (records.length === 0) {
+  //     ElMessage.warning('没有可用的策略数据');
+  //   }
+  //
+  //   // 处理数据
+  //   strategies.value = records.map(item => ({ id: item.id, name: item.name }));
+  //
+  //   // 如果路由中有策略ID，优先选择
+  //   const routeStrategyId = route.query.strategyId;
+  //   if (routeStrategyId) {
+  //     if (strategies.value.some(s => s.id === routeStrategyId)) {
+  //       selectedStrategy.value = routeStrategyId;
+  //       await loadMonitorData();
+  //       return;
+  //     } else {
+  //       ElMessage.warning(`策略ID ${routeStrategyId} 无效，将选择第一个策略`);
+  //     }
+  //   }
+
   loading.value = true;
   try {
-    const {records} =await fetchStrategies(
-        {
-          page: 1,
-          limit: 100,
-          name:'',
-          status:'all'
-        }
-    )
+    const records = [
+      { id: 1, name: '策略 1' },
+      { id: 2, name: '策略 2' },
+      { id: 3, name: '策略 3' }
+    ];
 
-    strategies.value = records.map(item => ({id:item.id,name: item.name}))
-    
-    // 检查路由参数中是否有策略ID
-    const routeStrategyId = route.query.strategyId;
-    if (routeStrategyId) {
-      // 验证路由中的策略ID是否有效
-      if (strategies.value.some(s => s.id === routeStrategyId)) {
-        selectedStrategy.value = routeStrategyId;
-        await loadMonitorData();
-        return;
-      } else {
-        ElMessage.warning(`策略ID ${routeStrategyId} 无效，将选择第一个策略`);
-      }
+    strategies.value = records.map(item => ({ id: item.id, name: item.name }));
+
+    // 默认选中第一个策略
+    if (strategies.value.length > 0) {
+      selectedStrategy.value = strategies.value[0].id;
+      await loadMonitorData();
+    } else {
+      error.value = '没有可用的策略数据';
     }
-    
     // 没有有效的路由参数时，选择第一个策略
     if (strategies.value.length > 0) {
       selectedStrategy.value = strategies.value[0].id;
@@ -293,7 +319,7 @@ async function loadStrategyList() {
     } else {
       error.value = '没有可用的策略数据';
     }
-    
+
   } catch (err) {
     console.error('加载策略列表失败:', err);
     error.value = '无法加载策略列表: ' + (err.response?.data?.message || err.message);
@@ -302,6 +328,8 @@ async function loadStrategyList() {
     loading.value = false;
   }
 }
+
+
 
 function updateRouteParam() {
   router.push({
@@ -321,68 +349,131 @@ function getStrategyStatus(strategyId) {
   return statusOptions[Math.floor(Math.random() * statusOptions.length)];
 }
 
+// async function loadMonitorData() {
+//   if (!selectedStrategy.value) {
+//     ElMessage.warning('请先选择策略');
+//     return;
+//   }
+//
+//   loading.value = true;
+//   error.value = null;
+//
+//   try {
+//     // 并行请求所有监控数据
+//     const [metricsResponse,warningsResponse,profitResponse,heatmapResponse] = await Promise.all([
+//       fetchMetrics(selectedStrategy.value),
+//       fetchWarnings(selectedStrategy.value),
+//       fetchProfitCurve(selectedStrategy.value),
+//       fetchHeatmap(selectedStrategy.value)
+//     ])
+//
+//     // 监控指标
+//     const metrics = metricsResponse.data;
+//     systemStatus.value = metrics.systemStatus;
+//     uptime.value = metrics.uptimeDays;
+//     netValue.value = metrics.netValue.toFixed(4);
+//     yesterdayNetValue.value = metrics.yesterdayNetValue?.toFixed(4) || '1.0000';
+//     todayProfit.value = metrics.todayProfit;
+//     yearToDate.value = metrics.yearToDateProfit;
+//     todayProfitPercentage.value = metrics.todayProfitPercentage.toFixed(2);
+//     yearToDatePercentage.value = metrics.yearToDatePercentage.toFixed(2);
+//     averageDeviation.value = metrics.averageDeviation.toFixed(2);
+//     maxDeviation.value = metrics.maxDeviation.toFixed(2);
+//     industryAvgDeviation.value = metrics.industryAvgDeviation.toFixed(2);
+//     // 预警通知
+//     warnings.value = warningsResponse.data.map(event => ({
+//       title: event.title,
+//       time: new Date(event.eventTime).toLocaleTimeString('zh-CN', { hour12: false }),
+//       description: event.description,
+//       level: event.riskLevel.toLowerCase(),
+//       resolved: event.resolved
+//     }));
+//
+//     // 图数据
+//     initHeatmapChart(heatmapResponse.data);
+//     initProfitChart(profitResponse.data);
+//     initRiskChart();
+//     // 更新时间戳
+//     updateTime.value = getCurrentTime();
+//
+//   } catch (err) {
+//     console.error('加载监控数据失败:', err);
+//     error.value = '加载监控数据失败: ' + (err.response?.data?.message || err.message);
+//     ElMessage.error(error.value);
+//   } finally {
+//     loading.value = false;
+//   }
+// }
 async function loadMonitorData() {
   if (!selectedStrategy.value) {
     ElMessage.warning('请先选择策略');
     return;
   }
-  
+
   loading.value = true;
   error.value = null;
-  
+
   try {
-    // 并行请求所有监控数据
-    const [metricsResponse,warningsResponse,profitResponse,heatmapResponse] = await Promise.all([
-        fetchMetrics(selectedStrategy.value),
-        fetchWarnings(selectedStrategy.value),
-        fetchProfitCurve(selectedStrategy.value),
-        fetchHeatmap(selectedStrategy.value)
-    ])
-    
-    // 监控指标
-    const metrics = metricsResponse.data;
-    systemStatus.value = metrics.systemStatus;
-    uptime.value = metrics.uptimeDays;
-    netValue.value = metrics.netValue.toFixed(4);
-    yesterdayNetValue.value = metrics.yesterdayNetValue?.toFixed(4) || '1.0000';
-    todayProfit.value = metrics.todayProfit;
-    yearToDate.value = metrics.yearToDateProfit;
-    todayProfitPercentage.value = metrics.todayProfitPercentage.toFixed(2);
-    yearToDatePercentage.value = metrics.yearToDatePercentage.toFixed(2);
-    averageDeviation.value = metrics.averageDeviation.toFixed(2);
-    maxDeviation.value = metrics.maxDeviation.toFixed(2);
-    industryAvgDeviation.value = metrics.industryAvgDeviation.toFixed(2);
-    // 预警通知
-    warnings.value = warningsResponse.data.map(event => ({
-      title: event.title,
-      time: new Date(event.eventTime).toLocaleTimeString('zh-CN', { hour12: false }),
-      description: event.description,
-      level: event.riskLevel.toLowerCase(),
-      resolved: event.resolved
-    }));
-    
-    // 图数据
-    initHeatmapChart(heatmapResponse.data);
-    initProfitChart(profitResponse.data);
+    // 假数据：模拟监控数据
+    systemStatus.value = 'RUNNING';
+    uptime.value = 120;
+    netValue.value = '1.23';
+    todayProfit.value = 0.45;
+    yearToDate.value = 10.5;
+    todayProfitPercentage.value = 5.6;
+    yearToDatePercentage.value = 12.3;
+    averageDeviation.value = 3.4;
+    maxDeviation.value = 8.1;
+    industryAvgDeviation.value = 5.6;
+
+    warnings.value = [
+      {
+        title: '风险事件 1',
+        time: '2025-07-12 14:32:12',
+        description: '策略收益波动过大',
+        level: 'high',
+      },
+      {
+        title: '风险事件 2',
+        time: '2025-07-12 15:00:00',
+        description: '市场风险警告',
+        level: 'medium',
+      }
+    ];
+
+    // 图表数据：这里我们可以使用模拟的数据
+    initHeatmapChart([
+      { industry: '行业 1', comparisonDimension: '维度 1', deviationValue: 4.5 },
+      { industry: '行业 1', comparisonDimension: '维度 2', deviationValue: 2.3 },
+      { industry: '行业 2', comparisonDimension: '维度 1', deviationValue: 3.1 }
+    ]);
+
+    initProfitChart([
+      { pointDate: '2025-07-01', netValue: 1.0 },
+      { pointDate: '2025-07-02', netValue: 1.2 },
+      { pointDate: '2025-07-03', netValue: 1.1 }
+    ]);
+
     initRiskChart();
-    // 更新时间戳
+
     updateTime.value = getCurrentTime();
-    
+
   } catch (err) {
     console.error('加载监控数据失败:', err);
-    error.value = '加载监控数据失败: ' + (err.response?.data?.message || err.message);
+    error.value = '加载监控数据失败: ' + err.message;
     ElMessage.error(error.value);
   } finally {
     loading.value = false;
   }
 }
 
+
 function refreshData() {
   if (!selectedStrategy.value) {
     ElMessage.warning('请先选择策略');
     return;
   }
-  
+
   loadMonitorData();
 }
 
@@ -390,17 +481,17 @@ function refreshData() {
 async function initCharts() {
   // 等待DOM更新完成
   await nextTick();
-  
+
   // 销毁现有图表实例
   if (heatmapInstance.value) heatmapInstance.value.dispose();
   if (profitInstance.value) profitInstance.value.dispose();
   if (riskInstance.value) riskInstance.value.dispose();
-  
+
   // 初始化图表容器
   heatmapInstance.value = heatmapChart.value ? echarts.init(heatmapChart.value) : null;
   profitInstance.value = profitChart.value ? echarts.init(profitChart.value) : null;
   riskInstance.value = riskChart.value ? echarts.init(riskChart.value) : null;
-  
+
   // 窗口大小变化时重绘图表
   window.addEventListener('resize', handleResize);
 }
@@ -411,27 +502,107 @@ function handleResize() {
   if (riskInstance.value) riskInstance.value.resize();
 }
 
+// function initHeatmapChart(heatmapData) {
+//   if (!heatmapData || !heatmapInstance.value) return;
+//
+//   // 提取唯一的行业和比较维度
+//   const industries = [...new Set(heatmapData.map(item => item.industry))];
+//   const dimensions = [...new Set(heatmapData.map(item => item.comparisonDimension))];
+//
+//   // 准备热力图数据
+//   const data = [];
+//   for (let i = 0; i < industries.length; i++) {
+//     for (let j = 0; j < dimensions.length; j++) {
+//       const item = heatmapData.find(
+//           d => d.industry === industries[i] &&
+//               d.comparisonDimension === dimensions[j]
+//       );
+//       if (item) {
+//         data.push([i, j, parseFloat(item.deviationValue)]);
+//       }
+//     }
+//   }
+//
+//   const option = {
+//     tooltip: {
+//       position: 'top',
+//       formatter: function(params) {
+//         return `${dimensions[params.value[1]]}在${industries[params.value[0]]}的<br>偏离度: ${params.value[2]}%`;
+//       }
+//     },
+//     grid: {
+//       top: '10%',
+//       left: '10%',
+//       right: '10%',
+//       bottom: '15%'
+//     },
+//     xAxis: {
+//       type: 'category',
+//       data: industries,
+//       splitArea: {
+//         show: true
+//       },
+//       axisLabel: {
+//         interval: 0,
+//         rotate: 30
+//       }
+//     },
+//     yAxis: {
+//       type: 'category',
+//       data: dimensions,
+//       splitArea: {
+//         show: true
+//       }
+//     },
+//     visualMap: {
+//       min: Math.min(...heatmapData.map(item => item.deviationValue)) - 1,
+//       max: Math.max(...heatmapData.map(item => item.deviationValue)) + 1,
+//       calculable: true,
+//       orient: 'horizontal',
+//       left: 'center',
+//       bottom: '5%',
+//       inRange: {
+//         color: ['#ffffff', '#e6f7ff', '#91d5ff', '#4096ff', '#0958d9']
+//       }
+//     },
+//     series: [{
+//       name: '偏离程度',
+//       type: 'heatmap',
+//       data: data,
+//       label: {
+//         show: true,
+//         formatter: '{c}%',
+//         color: '#333'
+//       },
+//       emphasis: {
+//         itemStyle: {
+//           shadowBlur: 10,
+//           shadowColor: 'rgba(0, 0, 0, 0.5)'
+//         }
+//       }
+//     }]
+//   };
+//
+//   heatmapInstance.value.setOption(option);
+// }
 function initHeatmapChart(heatmapData) {
   if (!heatmapData || !heatmapInstance.value) return;
-  
-  // 提取唯一的行业和比较维度
+
   const industries = [...new Set(heatmapData.map(item => item.industry))];
   const dimensions = [...new Set(heatmapData.map(item => item.comparisonDimension))];
-  
-  // 准备热力图数据
+
   const data = [];
   for (let i = 0; i < industries.length; i++) {
     for (let j = 0; j < dimensions.length; j++) {
       const item = heatmapData.find(
-        d => d.industry === industries[i] && 
-        d.comparisonDimension === dimensions[j]
+          d => d.industry === industries[i] && d.comparisonDimension === dimensions[j]
       );
       if (item) {
-        data.push([i, j, parseFloat(item.deviationValue)]);
+        data.push([i, j, item.deviationValue]);
       }
     }
   }
-  
+
   const option = {
     tooltip: {
       position: 'top',
@@ -491,20 +662,18 @@ function initHeatmapChart(heatmapData) {
       }
     }]
   };
-  
+
   heatmapInstance.value.setOption(option);
 }
 
 function initProfitChart(profitData) {
   if (!profitData || !profitInstance.value) return;
-  
-  // 准备图表数据 - 使用新的字段名
+
   const dates = profitData.map(item => {
     const date = new Date(item.pointDate);
     return `${date.getMonth() + 1}/${date.getDate()}`;
   });
-  
-  // 使用netValue字段
+
   const values = profitData.map(item => parseFloat(item.netValue));
   const option = {
     tooltip: {
@@ -568,9 +737,10 @@ function initProfitChart(profitData) {
       }
     }]
   };
-  
+
   profitInstance.value.setOption(option);
 }
+
 function initRiskChart() {
   if (!riskInstance.value) return;
 
@@ -627,6 +797,140 @@ function initRiskChart() {
 
   riskInstance.value.setOption(option);
 }
+
+
+// function initProfitChart(profitData) {
+//   if (!profitData || !profitInstance.value) return;
+//
+//   // 准备图表数据 - 使用新的字段名
+//   const dates = profitData.map(item => {
+//     const date = new Date(item.pointDate);
+//     return `${date.getMonth() + 1}/${date.getDate()}`;
+//   });
+//
+//   // 使用netValue字段
+//   const values = profitData.map(item => parseFloat(item.netValue));
+//   const option = {
+//     tooltip: {
+//       trigger: 'axis',
+//       formatter: '{b}<br>净值: {c}'
+//     },
+//     grid: {
+//       left: '3%',
+//       right: '4%',
+//       bottom: '10%',
+//       top: '10%',
+//       containLabel: true
+//     },
+//     xAxis: {
+//       type: 'category',
+//       boundaryGap: false,
+//       data: dates,
+//       axisLine: {
+//         lineStyle: {
+//           color: '#909399'
+//         }
+//       }
+//     },
+//     yAxis: {
+//       type: 'value',
+//       min: values.length > 0 ? Math.min(...values) * 0.95 : 0,
+//       axisLine: {
+//         show: true,
+//         lineStyle: {
+//           color: '#909399'
+//         }
+//       },
+//       splitLine: {
+//         lineStyle: {
+//           type: 'dashed'
+//         }
+//       }
+//     },
+//     series: [{
+//       name: '净值',
+//       type: 'line',
+//       smooth: true,
+//       symbol: 'circle',
+//       symbolSize: 8,
+//       data: values,
+//       lineStyle: {
+//         width: 3,
+//         color: '#1e9fff'
+//       },
+//       areaStyle: {
+//         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+//           { offset: 0, color: 'rgba(30, 159, 255, 0.4)' },
+//           { offset: 1, color: 'rgba(30, 159, 255, 0.05)' }
+//         ])
+//       },
+//       markPoint: {
+//         data: [
+//           { type: 'max', name: '最大值' },
+//           { type: 'min', name: '最小值' }
+//         ]
+//       }
+//     }]
+//   };
+//
+//   profitInstance.value.setOption(option);
+// }
+// function initRiskChart() {
+//   if (!riskInstance.value) return;
+//
+//   const option = {
+//     tooltip: {
+//       trigger: 'item',
+//       formatter: '{a} <br/>{b}: {c}% ({d}%)'
+//     },
+//     legend: {
+//       orient: 'vertical',
+//       right: 10,
+//       top: 'center',
+//       data: ['市场风险', '信用风险', '流动性风险', '操作风险', '模型风险'],
+//       textStyle: {
+//         color: '#606266'
+//       }
+//     },
+//     series: [
+//       {
+//         name: '风险分布',
+//         type: 'pie',
+//         radius: ['40%', '70%'],
+//         center: ['40%', '50%'],
+//         avoidLabelOverlap: false,
+//         itemStyle: {
+//           borderRadius: 8,
+//           borderColor: '#fff',
+//           borderWidth: 2
+//         },
+//         label: {
+//           show: false,
+//           position: 'center'
+//         },
+//         emphasis: {
+//           label: {
+//             show: true,
+//             fontSize: '16',
+//             fontWeight: 'bold'
+//           }
+//         },
+//         labelLine: {
+//           show: false
+//         },
+//         data: [
+//           { value: 35, name: '市场风险', itemStyle: { color: '#36cfc9' } },
+//           { value: 25, name: '信用风险', itemStyle: { color: '#69c0ff' } },
+//           { value: 18, name: '流动性风险', itemStyle: { color: '#1e9fff' } },
+//           { value: 12, name: '操作风险', itemStyle: { color: '#597ef7' } },
+//           { value: 10, name: '模型风险', itemStyle: { color: '#0958d9' } }
+//         ]
+//       }
+//     ]
+//   };
+//
+//   riskInstance.value.setOption(option);
+// }
 function getWarningIcon(level) {
   switch(level) {
     case 'high': return 'el-icon-warning-outline'
@@ -663,18 +967,18 @@ onMounted(() => {
       loadMonitorData();
     }
   });
-  
+
   // 初始化图表
   initCharts();
-  
+
   // 加载策略列表
   loadStrategyList();
-  
+
   // 启动定时更新时间
   timeUpdateInterval.value = setInterval(() => {
     updateTime.value = getCurrentTime();
   }, 1000);
-  
+
   // 滚动预警信息
   scrollInterval.value = setInterval(() => {
     const warningList = document.querySelector('.warning-list');
@@ -693,12 +997,12 @@ onBeforeUnmount(() => {
   if (scrollInterval.value) clearInterval(scrollInterval.value);
   if (timeUpdateInterval.value) clearInterval(timeUpdateInterval.value);
   if (dataUpdateInterval.value) clearInterval(dataUpdateInterval.value);
-  
+
   // 销毁图表实例
   if (heatmapInstance.value) heatmapInstance.value.dispose();
   if (profitInstance.value) profitInstance.value.dispose();
   if (riskInstance.value) riskInstance.value.dispose();
-  
+
   // 移除事件监听
   window.removeEventListener('resize', handleResize);
 });

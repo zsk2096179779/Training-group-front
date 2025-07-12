@@ -304,10 +304,10 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { 
-  Check, DataAnalysis, SetUp, TrendCharts, Histogram, 
-  Cpu, Promotion, Refresh, Timer, View, VideoPlay, 
-  RefreshRight, SwitchButton, Download, DataLine 
+import {
+  Check, DataAnalysis, SetUp, TrendCharts, Histogram,
+  Cpu, Promotion, Refresh, Timer, View, VideoPlay,
+  RefreshRight, SwitchButton, Download, DataLine
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import {fetchStrategies} from "@/api/strategy";
@@ -340,10 +340,15 @@ const rebalance = ref({
   cashDeviation: 2
 })
 const backtestResults = ref({
-  cumulativeReturn: 0.0,
-  maxDrawdown: 0.0,
-  sharpeRatio: 0.0,
-  trades: 0
+  // cumulativeReturn: 0.0,
+  // maxDrawdown: 0.0,
+  // sharpeRatio: 0.0,
+  // trades: 0
+  cumulativeReturn: 12.5,   // 累计收益（假数据）
+  maxDrawdown: 10.2,       // 最大回撤（假数据）
+  sharpeRatio: 1.75,       // 夏普比率（假数据）
+  trades: 150              // 交易次数（假数据）
+
 })
 // 回测设置
 const backtestDateRange = ref([new Date(2022, 0, 1), new Date(2023, 11, 31)])
@@ -371,7 +376,7 @@ const runBacktest = async () => {
     type: 'info',
     duration: 2000
   });
-  
+
   try {
     // 构造请求数据
     const requestData = {
@@ -381,27 +386,32 @@ const runBacktest = async () => {
       transactionFee: parseFloat(transactionFee.value),
       slippage: parseFloat(slippage.value)
     };
-    
+
     // 发送POST请求到后端回测接口
     const response = await apirunBacktest(requestData);
-    
-    // 处理响应数据并格式化数值
-    const result = response.data;
 
+    // 处理响应数据并格式化数值
+    // const result = response.data;
+    const result = {
+      cumulativeReturn: 12.5,
+      maxDrawdown: 10.2,
+      sharpeRatio: 1.75,
+      trades: 150
+    };
     // 格式化数值，保留两位小数，去掉正号
     const formatValue = (value, isPercentage = false) => {
       if (value === null || value === undefined) return '0.00';
       let num = parseFloat(value);
       if (isNaN(num)) return '0.00';
-      
+
       // 保留两位小数
       let formatted = num.toFixed(2);
-      
+
       // 如果是百分比且数值为负数，去掉正号
       if (isPercentage && num < 0) {
         formatted = '-' + Math.abs(num).toFixed(2);
       }
-      
+
       return formatted;
     };
 
@@ -412,7 +422,7 @@ const runBacktest = async () => {
       sharpeRatio: formatValue(result.sharpeRatio),
       trades: result.trades || 0
     };
-    
+
     ElMessage({
       message: '回测完成！',
       type: 'success'
@@ -437,12 +447,28 @@ watch(selectedStrategy, (newStrategyId) => {
 async function loadStrategyList() {
   loading.value = true
   error.value = null
+  // try {
+  //   const {records} = await fetchStrategies({page:1,limit:100})
+  //   strategies.value = records.map(item => ({id: item.id, name: item.name}))
+  //   if(strategies.value.length){
+  //     selectedStrategy.value = strategies.value[0].id
+  //   }
   try {
-    const {records} = await fetchStrategies({page:1,limit:100})
-    strategies.value = records.map(item => ({id: item.id, name: item.name}))
-    if(strategies.value.length){
-      selectedStrategy.value = strategies.value[0].id
+    // 假数据：模拟策略数据
+    const records = [
+      { id: 1, name: '策略 1' },
+      { id: 2, name: '策略 2' },
+      { id: 3, name: '策略 3' }
+    ];
+
+    strategies.value = records.map(item => ({ id: item.id, name: item.name }));
+
+    if (strategies.value.length) {
+      selectedStrategy.value = strategies.value[0].id;
+    } else {
+      error.value = '没有可用的策略数据';
     }
+
   } catch (err) {
     console.error('加载策略列表失败:', err)
     error.value = '无法加载策略列表: ' + (err.response?.data?.message || err.message)
@@ -454,12 +480,12 @@ async function loadStrategyList() {
 const resetBacktest = () => {
   // 重置回测时间范围为默认值
   backtestDateRange.value = [new Date(2022, 0, 1), new Date(2023, 11, 31)];
-  
+
   // 重置资金和费用参数为默认值
   initialCapital.value = '1000000';
   transactionFee.value = '0.15';
   slippage.value = '0.1';
-  
+
   // 重置回测结果为初始状态
   backtestResults.value = {
     cumulativeReturn: '0.00',
@@ -467,7 +493,7 @@ const resetBacktest = () => {
     sharpeRatio: '0.00',
     trades: 0
   };
-  
+
   ElMessage({
     message: '参数已重置为默认值',
     type: 'success'
@@ -482,37 +508,48 @@ async function handleStrategyChange(strategyId){
   strategyId1.value = strategyId
   try {
     loading.value = true
-    
+
     // 同时调用策略详情和再平衡设置两个API
     const [metric, rebalanceData] = await Promise.all([
           fetchMetrics(strategyId),
           fetchRebalanceDetail(strategyId)
       ])
-    
+
     // 处理策略详情响应
     profits.value = (metric.yearToDatePercentage > 0 ? '+' : '') +
                     metric.yearToDatePercentage.toFixed(1) + '%'
     runtime.value = metric.uptimeDays + '天'
     // 直接使用后端返回的风险等级，不做转换
     riskLevel.value = metric.riskLevel || '中'
-    
+
     // 处理再平衡设置响应
     const cfg = rebalanceData
     rebalance.value = {
-      activeRebalancing: cfg.activeRebalancing,
-      triggerByThreshold: cfg.triggerByThreshold,
-      triggerByPeriodic: cfg.triggerByPeriodic,
-      frequency: cfg.frequency || 'monthly',
-      executionTime: cfg.executionTime?.length === 5 ?
-          cfg.executionTime :
-          cfg.executionTime?.substring(0, 5) || '09:30',
-      maxAdjustmentRate: cfg.maxAdjustmentRate || 20,
-      stockDeviation: cfg.stockDeviation || 5,
-      bondDeviation: cfg.bondDeviation || 3,
-      commodityDeviation: cfg.commodityDeviation || 7,
-      cashDeviation: cfg.cashDeviation || 2
+      // activeRebalancing: cfg.activeRebalancing,
+      // triggerByThreshold: cfg.triggerByThreshold,
+      // triggerByPeriodic: cfg.triggerByPeriodic,
+      // frequency: cfg.frequency || 'monthly',
+      // executionTime: cfg.executionTime?.length === 5 ?
+      //     cfg.executionTime :
+      //     cfg.executionTime?.substring(0, 5) || '09:30',
+      // maxAdjustmentRate: cfg.maxAdjustmentRate || 20,
+      // stockDeviation: cfg.stockDeviation || 5,
+      // bondDeviation: cfg.bondDeviation || 3,
+      // commodityDeviation: cfg.commodityDeviation || 7,
+      // cashDeviation: cfg.cashDeviation || 2
+      activeRebalancing: true, // 主动/被动调仓
+      triggerByThreshold: true, // 阈值触发标志
+      triggerByPeriodic: false, // 定期触发标志
+      frequency: 'monthly',    // 频率
+      executionTime: '09:30',   // 执行时间
+      maxAdjustmentRate: 20,    // 最大调仓比例
+      // 资产偏离阈值
+      stockDeviation: 5,
+      bondDeviation: 3,
+      commodityDeviation: 7,
+      cashDeviation: 2
     }
-    
+
   } catch (err) {
     console.error('加载策略详情失败:', err)
     ElMessage.error('加载策略配置失败: ' + (err.response?.data?.message || err.message))
@@ -538,10 +575,10 @@ async function saveConfig() {
       cashDeviation: rebalance.value.cashDeviation,
       strategyId:strategyId1.value
     };
-    
+
     // 发送POST请求到后端
     const res = await updateRebalanceConfig(payload);
-    
+
     // 检查响应数据
     if (res === 1) {
       ElMessage({

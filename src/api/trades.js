@@ -24,7 +24,7 @@ export function rejectOrder(orderId) {
 }
 /** 6. 交割单分页 */
 export function listDeliveryNotes(page,size) {
-    return client.get('/trading/delivery-notes', {params:{page,szie}}).then(r => r.data)
+    return client.get('/trading/delivery-notes', {params:{page,size}}).then(r => r.data)
 }
 
 /** 1. 获取失败订单列表 （差错列表） */
@@ -37,7 +37,7 @@ export function fetchErrorOrders({ page = 1, limit = 100 } ) {
 /** 2. 获取可替换的基金列表 （备用标的） */
 export function fetchFunds({ page = 1, limit = 100 } = {}) {
     return client
-        .get('/fund-research/list', { page, limit, nameFilter: '' })
+        .get('/fund-research/list', {params:{ page, limit}})
         .then(r => r.data.items)
 }
 
