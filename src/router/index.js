@@ -2,11 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Auth       from '../components/Auth.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 import { isAuthenticated, isAdmin } from '@/utils/auth'
-import StrategyManagement from '../pages/StrategyManagement.vue'
-import StrategyCreation from '../pages/StrategyCreation.vue'
-import StrategyMonitoring from '../pages/StrategyMonitoring.vue'
-import RebalanceSetting from '../pages/RebalanceSetting.vue'
-import StrategyDetail from '../pages/Detail.vue'
+import TradeLayout from "@/layouts/TradeLayout.vue";
+
+
 // fund-research 系列
 const FundList    = () => import('../views/fund-research/List.vue')
 const FundCompany = () => import('../views/fund-research/Company.vue')
@@ -15,22 +13,34 @@ const FundProfile = () => import('../views/fund-research/Profile.vue')
 
 // 因子管理分页组件
 const FactorOverview = () => import('../views/factor-management/FactorManagement.vue')
-const FactorLayout         = () => import('../components/FactorLayout.vue') // 父组件，需要 <router-view/>
+const FactorLayout         = () => import('../layouts/FactorLayout.vue') // 父组件，需要 <router-view/>
 const FactorTreeManagement = () => import('../views/factor-management/FactorTreeManagement.vue')
 const StyleFactorManagement= () => import('../views/factor-management/StyleFactorManagement.vue')
 const DataSourceConfig = () => import('../views/factor-management/DataSourceConfig.vue')
 
 
 //组合调仓分页组件
-const PortfolioLayout = () => import('../components/PortfolioLayout.vue')
+const PortfolioLayout = () => import('../layouts/PortfolioLayout.vue')
 const ComboList = () => import('../views/portfolio-management/ComboList.vue')
 const ComboCreate = () => import('../views/portfolio-management/ComboCreate.vue')
 const DIYComboList = () => import('../views/portfolio-management/DiyComboList.vue')
 
-// 其它模块空白页
-const StrategyMgmt  = () => import('../views/strategy-management/index.vue')
+//策略管理分页组件
+const StrategyLayout = () => import('../layouts/StrategyLayout.vue')
+const StrategyManagement = () => import('../views/strategy-management/StrategyManagement.vue')
+const Detail = () => import('../views/strategy-management/Detail.vue')
+const RebalanceSetting = () => import('../views/strategy-management/RebalanceSetting.vue')
+const StrategyCreation = () => import('../views/strategy-management/StrategyCreation.vue')
+const StrategyMonitoring = () => import('../views/strategy-management/StrategyMonitoring.vue')
 
-const TradeMgmt     = () => import('../views/trade-management/index.vue')
+// 其它模块空白页
+const AccountRebalancing     = () => import('../views/trade-management/AccountRebalancing.vue')
+const ErrorHandling = () => import('../views/trade-management/ErrorHandling.vue')
+const OrderManagement = () => import('../views/trade-management/OrderManagement.vue')
+const Rebalancing = () => import('../views/trade-management/Rebalancing.vue')
+const SettlementSlip = () => import('../views/trade-management/SettlementSlip.vue')
+
+
 const AdminPanel    = () => import('../views/admin-management/index.vue')
 const NotFound      = () => import('../views/NotFound.vue')
 
@@ -99,25 +109,72 @@ const routes = [
                     },
                 ]
             },
-    { path: '/', component: Index },
-    {
-        path: '/Leader',
-        component:Leader,
-        children: [
-            { path: '/strategy-management',name: 'StrategyManagement',component: StrategyManagement},
-            { path: '/strategy-creation',name: 'StrategyCreation',component: StrategyCreation},
-            { path: '/strategy-monitoring',name: 'StrategyMonitoring',component: StrategyMonitoring},
-            { path: '/rebalance-setting',name: 'RebalanceSetting',component: RebalanceSetting},
-            { path: '/strategy-management/Detail',name : 'StrategyDetail',component: StrategyDetail}
-        ]
-    },
-    { path: '/:pathMatch(.*)*', component: NotFound },
-]
-
 
             // 其它模块
-            { path: 'strategy-management',   name: 'StrategyManagement',   component: StrategyMgmt,  meta: { requiresAuth: true } },
-            { path: 'trade-management',      name: 'TradeManagement',      component: TradeMgmt,     meta: { requiresAuth: true } },
+            { path: 'strategy-management',   name: 'StrategyLayout',   component: StrategyLayout,  meta: { requiresAuth: true } ,
+                children: [
+                    {
+                        path: '',
+                        name: 'Strategy-management',
+                        component: StrategyManagement,
+                        meta: { requiresAuth: true }
+                    },
+                    {
+                        path: 'create',
+                        name: 'StrategyCreate',
+                        component: StrategyCreation,
+                        meta: { requiresAuth: true }
+                    },
+                    {
+                        path:'monitor',
+                        name: 'StrategyMonitoring',
+                        component: StrategyMonitoring,
+                        meta: { requiresAuth: true }
+                    },
+                    {
+                        path: 'setting',
+                        name: 'StrategySetting',
+                        component: RebalanceSetting,
+                        meta: { requiresAuth: true }
+                    },
+
+                ]
+
+
+            },
+            { path: 'trade-management',      name: 'TradeLayout',      component: TradeLayout,     meta: { requiresAuth: true }  ,
+                children: [
+                    {
+                        path: 'rebalancing',
+                        name: 'Rebalancing',
+                        component: Rebalancing,
+                        meta: { title: '组合调仓' }
+                    },
+                    {
+                        path: 'error-handling',
+                        name: 'ErrorHandling',
+                        component: ErrorHandling,
+                        meta: { title: '差错处理' }
+                    },
+                    {
+                        path: 'account-rebalancing',
+                        name: 'AccountRebalancing',
+                        component: AccountRebalancing,
+                        meta: { title: '账户调仓' }
+                    },
+                    {
+                        path: 'orders',
+                        name: 'OrderManagement',
+                        component: OrderManagement,
+                        meta: { title: '交易单管理' }
+                    },
+                    {
+                        path: 'settlement-slip',
+                        name: 'SettlementSlip',
+                        component:SettlementSlip,
+                        meta: { title: '交割单管理' }
+                    }
+                ]},
             { path: 'admin',                 name: 'Admin',                component: AdminPanel,    meta: { requiresAuth: true, requiresAdmin: true } }
         ]
     },

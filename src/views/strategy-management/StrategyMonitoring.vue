@@ -6,18 +6,28 @@
         <div class="status-indicator" :class="systemStatus"></div>
         <span class="text-lg font-bold">策略监控中心</span>
       </div>
-      
+
       <div class="header-controls">
-        <el-select v-model="selectedStrategy" placeholder="选择策略" size="medium">
+        <el-select
+            v-model="selectedStrategy"
+            placeholder="选择策略"
+            size="small"
+            @change="handleStrategySelect"
+            style="width:180px;"
+        >
           <el-option
-            v-for="strategy in strategies"
-            :key="strategy.id"
-            :label="strategy.name"
-            :value="strategy.id">
-          </el-option>
+              v-for="s in strategies"
+              :key="s.id"
+              :label="s.name"
+              :value="s.id"
+          />
         </el-select>
-        
-        <el-button type="primary" size="medium" @click="refreshData" icon="el-icon-refresh">
+        <el-button
+            type="primary"
+            size="small"
+            @click="refreshData"
+        >
+          <el-icon><Refresh /></el-icon>
           刷新数据
         </el-button>
       </div>
@@ -30,7 +40,7 @@
         <el-card class="metric-card">
           <div class="metric-title">
             <span>运行状态</span>
-            <el-tag size="mini" :type="systemStatus === 'running' ? 'success' : 'danger'">
+            <el-tag size="small" :type="systemStatus === 'running' ? 'success' : 'danger'">
               {{ systemStatusText }}
             </el-tag>
           </div>
@@ -96,7 +106,7 @@
                 <div class="warning-content">
                   <div class="warning-title">
                     {{ warning.title }}
-                    <el-tag size="mini" :type="getWarningType(warning.level)">
+                    <el-tag size="small" :type="getWarningType(warning.level)">
                       {{ getWarningLevelText(warning.level) }}
                     </el-tag>
                   </div>
@@ -166,8 +176,12 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { ElNotification, ElMessage } from 'element-plus'
-import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
+import {Refresh} from "@element-plus/icons-vue";
+import {fetchStrategies} from "@/api/strategy";
+import {
+   fetchWarnings, fetchProfitCurve, fetchHeatmap, fetchMetrics
+} from "@/api/monitoring";
 
 const route = useRoute()
 const router = useRouter()
@@ -245,26 +259,26 @@ function formatCurrency(value) {
 }
 
 async function loadStrategyList() {
+  loading.value = true;
   try {
-    const response = await axios.post('/api/strategy-management', {
-      id : 1,
-      name: 'fu4geliu'
-    }, {
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-    strategies.value = response.data.map(item => ({
-        id: item.id,
-        name: item.name
-      }));
+    const {records} =await fetchStrategies(
+        {
+          page: 1,
+          limit: 100,
+          name:'',
+          status:'all'
+        }
+    )
+
+    strategies.value = records.map(item => ({id:item.id,name: item.name}))
     
     // 检查路由参数中是否有策略ID
     const routeStrategyId = route.query.strategyId;
     if (routeStrategyId) {
       // 验证路由中的策略ID是否有效
-      if (strategies.value.some(s => s.id == routeStrategyId)) {
+      if (strategies.value.some(s => s.id === routeStrategyId)) {
         selectedStrategy.value = routeStrategyId;
-        loadMonitorData();
+        await loadMonitorData();
         return;
       } else {
         ElMessage.warning(`策略ID ${routeStrategyId} 无效，将选择第一个策略`);
@@ -275,7 +289,7 @@ async function loadStrategyList() {
     if (strategies.value.length > 0) {
       selectedStrategy.value = strategies.value[0].id;
       updateRouteParam();
-      loadMonitorData();
+      await loadMonitorData();
     } else {
       error.value = '没有可用的策略数据';
     }
@@ -318,36 +332,12 @@ async function loadMonitorData() {
   
   try {
     // 并行请求所有监控数据
-    const [metricsResponse, warningsResponse, profitResponse, heatmapResponse] = await Promise.all([
-      
-      // 实时监控指标
-      axios.post('/api/strategy-monitoring/Metrics', {
-        id: selectedStrategy.value,
-        name: 'fu4geliu'
-      }),
-      
-      // 预警通知数据
-      axios.post('/api/strategy-monitoring/Warnings', {
-        id: selectedStrategy.value,
-        name: 'fu4geliu'
-      }),
-      
-      // 收益曲线数据
-      axios.post('/api/strategy-monitoring/ProfitCurve', {
-        id: selectedStrategy.value,
-        name: 'fu4geliu'
-      }),
-      
-      // 热力图数据
-      axios.post('/api/strategy-monitoring/Heatmap', {
-        id: selectedStrategy.value,
-        name: 'fu4geliu'
-      })
-    ]);
-    console.log('监控指标响应:', metricsResponse);
-    console.log('预警通知响应:', warningsResponse);
-    console.log('收益曲线响应:', profitResponse);
-    console.log('热力图响应:', heatmapResponse);
+    const [metricsResponse,warningsResponse,profitResponse,heatmapResponse] = await Promise.all([
+        fetchMetrics(selectedStrategy.value),
+        fetchWarnings(selectedStrategy.value),
+        fetchProfitCurve(selectedStrategy.value),
+        fetchHeatmap(selectedStrategy.value)
+    ])
     
     // 监控指标
     const metrics = metricsResponse.data;

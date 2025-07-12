@@ -304,14 +304,15 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import axios from 'axios'
 import { 
   Check, DataAnalysis, SetUp, TrendCharts, Histogram, 
   Cpu, Promotion, Refresh, Timer, View, VideoPlay, 
   RefreshRight, SwitchButton, Download, DataLine 
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-
+import {fetchStrategies} from "@/api/strategy";
+import {fetchMetrics} from "@/api/monitoring";
+import {fetchRebalanceDetail,updateRebalanceConfig,apirunBacktest} from "@/api/rebalance";
 // 策略选择
 const strategyId1 = ref(1)
 const strategies = ref([])
@@ -382,9 +383,7 @@ const runBacktest = async () => {
     };
     
     // 发送POST请求到后端回测接口
-    const response = await axios.post('/api/strategy-rebalance/HuiCe', requestData, {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const response = await apirunBacktest(requestData);
     
     // 处理响应数据并格式化数值
     const result = response.data;
@@ -439,20 +438,9 @@ async function loadStrategyList() {
   loading.value = true
   error.value = null
   try {
-    const response = await axios.post('/api/strategy-management', {
-      id : 1,
-      name: 'fu4geliu'
-    }, {
-      headers: { 'Content-Type': 'application/json' }
-    })
-    
-    strategies.value = response.data.map(item => ({
-      id: item.id,
-      name: item.name
-    }))
-    
-    // 如果有策略数据，自动选择第一个并加载详情
-    if (strategies.value.length > 0) {
+    const {records} = await fetchStrategies({page:1,limit:100})
+    strategies.value = records.map(item => ({id: item.id, name: item.name}))
+    if(strategies.value.length){
       selectedStrategy.value = strategies.value[0].id
     }
   } catch (err) {
@@ -486,52 +474,43 @@ const resetBacktest = () => {
   });
 };
 
+
+
 // 加载选定策略的详情
-const handleStrategyChange = async (strategyId) => {
+async function handleStrategyChange(strategyId){
   if (!strategyId) return
   strategyId1.value = strategyId
   try {
     loading.value = true
     
     // 同时调用策略详情和再平衡设置两个API
-    const [strategyResponse, rebalanceResponse] = await Promise.all([
-      axios.post('/api/strategy-monitoring/Metrics', {
-        id: strategyId,
-        name: 'fu4geliu'
-      }, {
-        headers: { 'Content-Type': 'application/json' }
-      }),
-      axios.post('/api/strategy-rebalance/Detail', {
-        id: strategyId,
-        name: 'fu4geliu'
-      }, {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    ])
+    const [metric, rebalanceData] = await Promise.all([
+          fetchMetrics(strategyId),
+          fetchRebalanceDetail(strategyId)
+      ])
     
     // 处理策略详情响应
-    const strategyData = strategyResponse.data
-    profits.value = (strategyData.yearToDatePercentage > 0 ? '+' : '') + 
-                    strategyData.yearToDatePercentage.toFixed(1) + '%'
-    runtime.value = strategyData.uptimeDays + '天'
+    profits.value = (metric.yearToDatePercentage > 0 ? '+' : '') +
+                    metric.yearToDatePercentage.toFixed(1) + '%'
+    runtime.value = metric.uptimeDays + '天'
     // 直接使用后端返回的风险等级，不做转换
-    riskLevel.value = strategyData.riskLevel || '中'
+    riskLevel.value = metric.riskLevel || '中'
     
     // 处理再平衡设置响应
-    const rebalanceData = rebalanceResponse.data
+    const cfg = rebalanceData
     rebalance.value = {
-      activeRebalancing: rebalanceData.activeRebalancing,
-      triggerByThreshold: rebalanceData.triggerByThreshold,
-      triggerByPeriodic: rebalanceData.triggerByPeriodic,
-      frequency: rebalanceData.frequency || 'monthly',
-      executionTime: rebalanceData.executionTime?.length === 5 ? 
-          rebalanceData.executionTime : 
-          rebalanceData.executionTime?.substring(0, 5) || '09:30',
-      maxAdjustmentRate: rebalanceData.maxAdjustmentRate || 20,
-      stockDeviation: rebalanceData.stockDeviation || 5,
-      bondDeviation: rebalanceData.bondDeviation || 3,
-      commodityDeviation: rebalanceData.commodityDeviation || 7,
-      cashDeviation: rebalanceData.cashDeviation || 2
+      activeRebalancing: cfg.activeRebalancing,
+      triggerByThreshold: cfg.triggerByThreshold,
+      triggerByPeriodic: cfg.triggerByPeriodic,
+      frequency: cfg.frequency || 'monthly',
+      executionTime: cfg.executionTime?.length === 5 ?
+          cfg.executionTime :
+          cfg.executionTime?.substring(0, 5) || '09:30',
+      maxAdjustmentRate: cfg.maxAdjustmentRate || 20,
+      stockDeviation: cfg.stockDeviation || 5,
+      bondDeviation: cfg.bondDeviation || 3,
+      commodityDeviation: cfg.commodityDeviation || 7,
+      cashDeviation: cfg.cashDeviation || 2
     }
     
   } catch (err) {
@@ -542,10 +521,10 @@ const handleStrategyChange = async (strategyId) => {
   }
 }
 
-const saveConfig = async () => {
+async function saveConfig() {
   try {
     // 构造请求数据
-    const requestData = {
+    const payload = {
       id: 1,
       activeRebalancing: rebalance.value.activeRebalancing,
       triggerByThreshold: rebalance.value.triggerByThreshold,
@@ -561,12 +540,10 @@ const saveConfig = async () => {
     };
     
     // 发送POST请求到后端
-    const response = await axios.post('/api/strategy-rebalance/Update', requestData, {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const res = await updateRebalanceConfig(payload);
     
     // 检查响应数据
-    if (response.data === 1) {
+    if (res === 1) {
       ElMessage({
         message: '配置已保存成功！',
         type: 'success'
