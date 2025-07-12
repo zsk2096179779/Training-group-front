@@ -72,4 +72,4 @@
 - **测试工程师**：负责编写测试用例并执行系统功能测试，确保系统稳定性和功能正确性。
 
 ## 6. 开源仓库
-本项目的开源仓库地址为：[https://github.com/YourRepositoryLink](https://github.com/YourRepositoryLink)
+本项目的开源仓库地址为：https://github.com/zsk2096179779/Training-group-front和https://github.com/zsk2096179779/Training-group-back
