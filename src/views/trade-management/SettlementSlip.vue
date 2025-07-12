@@ -112,12 +112,11 @@ async function fetchSlips() {
   loading.value = true
   try {
     const params = {
-      startDate: filter.value.dateRange[0] || '',
-      endDate:   filter.value.dateRange[1] || '',
-      account:   filter.value.account,
-      page:      filter.value.page,
-      pageSize:  filter.value.pageSize
+      page:  filter.value.page,
+      size:  filter.value.pageSize
     }
+
+    console.log("Fetching delivery notes with params:", params);
     const { items, total: t } = await listDeliveryNotes(params)
     records.value = items
     total.value   = t

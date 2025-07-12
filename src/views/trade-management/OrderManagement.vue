@@ -45,7 +45,7 @@
             <el-button
                 type="success"
                 size="small"
-                @click="onSend(row.orderId)"
+                @click="onSubmitOrder(row.orderId)"
                 :disabled="row.status !== 'PENDING'"
             >下单</el-button>
             <el-button
@@ -77,7 +77,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { listOrders, executeOrder, rejectOrder } from '@/api/trades'
+import { listOrders, executeOrder, rejectOrder,submitOrders } from '@/api/trades'
 import { ElMessage } from 'element-plus'
 
 // Tab 类型：open / rebal / error
@@ -96,9 +96,8 @@ async function fetchOrders() {
   try {
     // 后端 listOrders 接口：{ items: [...], total }
     const { items, total: t } = await listOrders({
-      type:  tab.value,
       page:  page.value,
-      limit: pageSize.value
+      size: pageSize.value
     })
     orders.value = items
     total.value  = t
@@ -127,13 +126,15 @@ function onSizeChange(size) {
 }
 
 // 单条 下单/驳回
-async function onSend(id) {
+async function onSubmitOrder(orderId) {
+  const orderData = { /* 提交的订单数据 */ };
   try {
-    await executeOrder(id)
-    ElMessage.success('下单成功')
-    fetchOrders()
+    // 调用submitOrders方法，传递需要提交的订单数据
+    await submitOrders(orderData);
+    ElMessage.success('订单提交成功');
+    await fetchOrders(); // 提交成功后刷新订单列表
   } catch (err) {
-    ElMessage.error('下单失败：' + (err.message || err))
+    ElMessage.error('订单提交失败：' + (err.message || err));
   }
 }
 async function onReject(id) {
@@ -153,7 +154,7 @@ async function batchSend() {
   try {
     await Promise.all( orders.value.map(o => executeOrder(o.orderId)) )
     ElMessage.success('批量下单完成')
-    fetchOrders()
+    await fetchOrders()
   } catch (err) {
     ElMessage.error('批量下单失败：' + (err.message || err))
   } finally {

@@ -161,9 +161,6 @@ async function fetchData() {
   loading.value = true
   try {
     const params = {
-      strategyId: filter.value.strategyId,
-      startDate: filter.value.dateRange[0] ?? '',
-      endDate:   filter.value.dateRange[1] ?? '',
       page: filter.value.page,
       size: filter.value.pageSize
     }
